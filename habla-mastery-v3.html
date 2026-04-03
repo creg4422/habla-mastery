@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habla Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ed; --card:#fdfcf8; --ink:#16130f; --ink2:rgba(22,19,15,.52);
+  --ink3:rgba(22,19,15,.28); --line:rgba(22,19,15,.09); --line2:rgba(22,19,15,.05);
+  --gold:#9a6b24; --gold2:#c49040; --gold-bg:rgba(154,107,36,.08);
+  --gold-br:rgba(154,107,36,.22); --green:#2a6348; --green-bg:rgba(42,99,72,.09);
+  --red:#7c2828; --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.view{display:none;min-height:100vh;flex-direction:column}
+.view.on{display:flex}
+
+/* DASHBOARD */
+.dh{padding:1.4rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;border-bottom:1px solid var(--line);background:var(--card)}
+.logo{font-family:'Instrument Serif',serif;font-size:1.55rem;color:var(--ink)}.logo em{color:var(--gold);font-style:italic}
+.stats{display:flex;gap:.4rem;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:.35rem;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:.28rem .85rem;font-size:.72rem;font-family:'Geist Mono',monospace;color:var(--ink2)}
+.pill b{color:var(--ink);font-weight:500}
+
+.db{padding:1.5rem 2rem;flex:1}
+
+/* wave cards */
+.waves{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-bottom:1.5rem}
+.wcard{border-radius:14px;padding:1.25rem 1.5rem;cursor:pointer;border:2px solid transparent;transition:all .18s;position:relative;overflow:hidden}
+.wcard:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.07)}
+.wcard.selected{border-color:currentColor}
+.wcard.locked{opacity:.5;cursor:not-allowed}
+.wcard.locked:hover{transform:none;box-shadow:none}
+.wcard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.6rem}
+.wbadge{font-size:.65rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .7rem;border-radius:20px;font-family:'Geist Mono',monospace}
+.wlock{font-size:.75rem;opacity:.6}
+.wcard h3{font-family:'Instrument Serif',serif;font-size:1.1rem;font-weight:400;margin-bottom:.2rem}
+.wcard p{font-size:.75rem;opacity:.65;line-height:1.5}
+.wprog{margin-top:.85rem}
+.wprog-bar{height:3px;border-radius:2px;background:rgba(0,0,0,.1);overflow:hidden;margin-bottom:.3rem}
+.wprog-fill{height:100%;border-radius:2px;transition:width .5s}
+.wprog-txt{font-family:'Geist Mono',monospace;font-size:.65rem;opacity:.55}
+
+/* today card */
+.today-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.4rem 1.75rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+.today-card h2{font-family:'Instrument Serif',serif;font-size:1.35rem;font-weight:400;margin-bottom:.25rem}
+.today-card p{font-size:.83rem;color:var(--ink2);line-height:1.65;max-width:420px}
+.today-right{display:flex;flex-direction:column;align-items:flex-end;gap:.55rem;flex-shrink:0}
+.bi{font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--ink3);text-align:right}
+.btn-start{background:var(--ink);color:var(--bg);border:none;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;padding:.72rem 1.65rem;border-radius:var(--r);cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap}
+.btn-start:hover{opacity:.86;transform:translateY(-1px)}
+.btn-start:disabled{opacity:.3;cursor:not-allowed;transform:none}
+
+/* overall progress */
+.ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.4rem}
+.ph h3{font-size:.69rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.ph span{font-family:'Geist Mono',monospace;font-size:.71rem;color:var(--ink3)}
+.pt{height:5px;background:var(--line2);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
+.pf{height:100%;background:var(--gold);border-radius:3px;transition:width .6s}
+
+/* settings */
+.sl{font-size:.69rem;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-bottom:.6rem}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.9rem;margin-bottom:1.5rem}
+.ctrl label{display:block;font-size:.66rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.32rem}
+select,input[type=number]{width:100%;background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:.83rem;padding:.38rem .62rem;outline:none;cursor:pointer}
+.sr{display:flex;align-items:center;gap:.55rem}
+.sr input[type=range]{-webkit-appearance:none;flex:1;height:3px;background:var(--line);border-radius:2px;outline:none}
+.sr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid var(--card)}
+.sv{font-family:'Geist Mono',monospace;font-size:.77rem;color:var(--gold);min-width:36px;text-align:right}
+.btn-g{background:none;border:1px solid var(--line);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:.77rem;padding:.38rem .88rem;border-radius:6px;cursor:pointer;transition:all .12s;align-self:flex-end}
+.btn-g:hover{border-color:var(--ink2);color:var(--ink)}
+.btn-g.d:hover{border-color:var(--red);color:var(--red)}
+
+/* batch preview */
+.batch-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem}
+.batch-title{font-size:.69rem;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3)}
+.batch-meta{font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--ink3)}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.45rem;margin-bottom:1.5rem}
+.bc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.65rem .85rem;position:relative;transition:border-color .15s}
+.bc.m{border-color:transparent;background:var(--green-bg)}.bc.m::after{content:'✓';position:absolute;top:.5rem;right:.7rem;font-size:.68rem;color:var(--green);font-weight:500}
+.bc.t{border-color:var(--gold-br);background:var(--gold-bg)}
+.bn{font-size:.62rem;font-family:'Geist Mono',monospace;color:var(--ink3);margin-bottom:.15rem;display:flex;align-items:center;gap:.3rem}
+.be{font-size:.8rem;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw{font-size:.68rem;color:var(--ink2);margin-top:.25rem;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+
+/* PLAYER */
+.player{background:var(--bg);display:flex;flex-direction:column;min-height:100vh}
+.ptop{padding:.95rem 1.75rem;border-bottom:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.ptitle{font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--ink3);letter-spacing:.08em}
+.pbar-row{display:flex;align-items:center;gap:.55rem;flex:1;max-width:240px}
+.pbar-wrap{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.pbar-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s}
+.pbar-lbl{font-family:'Geist Mono',monospace;font-size:.67rem;color:var(--ink3);white-space:nowrap}
+.sp-dots{display:flex;gap:3px;flex-wrap:wrap;max-width:200px}
+.sp{width:20px;height:4px;border-radius:2px;background:var(--line);transition:background .3s}
+.sp.done{background:var(--green)}.sp.cur{background:var(--gold)}
+.topbtns{display:flex;gap:.45rem;align-items:center;flex-shrink:0}
+.btn-sm{background:none;border:1px solid var(--line);color:var(--ink3);font-family:'DM Sans',sans-serif;font-size:.77rem;padding:.32rem .78rem;border-radius:6px;cursor:pointer;transition:all .12s}
+.btn-sm:hover{border-color:var(--ink2);color:var(--ink)}
+.btn-sm.exit:hover{border-color:var(--red);color:var(--red)}
+.btn-sm.active{background:var(--gold-bg);border-color:var(--gold-br);color:var(--gold)}
+.tog-wrap{display:flex;align-items:center;gap:.38rem;font-size:.71rem;color:var(--ink3);cursor:pointer;white-space:nowrap}
+.tog-box{width:30px;height:17px;background:var(--line);border-radius:9px;position:relative;transition:background .2s;flex-shrink:0;border:none}
+.tog-box.on{background:var(--gold)}
+.tog-box::after{content:'';position:absolute;width:13px;height:13px;background:white;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.tog-box.on::after{left:15px}
+
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;text-align:center}
+.topic-crumb{font-size:.68rem;color:var(--ink3);letter-spacing:.06em;margin-bottom:.5rem}
+.snum{font-family:'Geist Mono',monospace;font-size:.68rem;color:var(--ink3);letter-spacing:.12em;margin-bottom:.6rem}
+.auto-banner{display:inline-flex;align-items:center;gap:.35rem;background:var(--gold-bg);border:1px solid var(--gold-br);color:var(--gold);border-radius:20px;padding:.18rem .72rem;font-size:.68rem;font-family:'Geist Mono',monospace;margin-bottom:.7rem}
+.auto-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.lvl{display:inline-block;font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.17rem .72rem;border-radius:20px;margin-bottom:1.1rem}
+.lv1{background:#dff0e5;color:#1a5c35}.lv2{background:#d5e8ff;color:#1040a0}
+.lv3{background:#fff0cc;color:#8a6000}.lv4{background:#ffd5d5;color:#7a2020}
+
+.sp-es{font-family:'Instrument Serif',serif;font-size:clamp(1.7rem,5vw,2.8rem);line-height:1.25;color:var(--ink);max-width:580px;margin:0 auto .75rem;transition:opacity .2s}
+.sp-en{font-size:.93rem;color:var(--ink2);font-style:italic;margin-bottom:.35rem;min-height:1.4em}
+.pips{display:flex;gap:5px;justify-content:center;margin:1.2rem 0}
+.pip{width:28px;height:4px;border-radius:2px;background:var(--line);transition:background .2s,transform .15s}
+.pip.d{background:rgba(154,107,36,.35)}.pip.a{background:var(--gold);transform:scaleY(1.7)}
+
+.play-ring{width:70px;height:70px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:1.35rem;display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 auto 1.1rem;transition:all .15s}
+.play-ring:hover{border-color:var(--gold);color:var(--gold)}
+.play-ring.act{background:var(--gold);border-color:var(--gold);color:#fff}
+.navrow{display:flex;align-items:center;justify-content:center;gap:.7rem;margin-bottom:1.1rem}
+.nav-btn{background:none;border:1px solid var(--line);color:var(--ink3);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;transition:all .12s}
+.nav-btn:hover{border-color:var(--ink2);color:var(--ink)}
+.nav-btn:disabled{opacity:.2;cursor:not-allowed}
+.status{font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--ink3);min-height:1.2em;margin-bottom:1.2rem}
+.mrow{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap}
+.btn-got{background:var(--green-bg);border:1.5px solid rgba(42,99,72,.28);color:var(--green);font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:500;padding:.58rem 1.35rem;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.btn-got:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-again{background:none;border:1px solid var(--line);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:.84rem;padding:.55rem 1.1rem;border-radius:var(--r);cursor:pointer;transition:all .12s}
+.btn-again:hover{border-color:var(--gold2);color:var(--gold)}
+
+.peek{padding:.65rem 1.75rem;border-top:1px solid var(--line);background:var(--card)}
+.peek-l{font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.4rem}
+.peek-list{display:flex;gap:.32rem;overflow-x:auto;padding-bottom:.2rem}
+.pi{flex-shrink:0;font-size:.7rem;padding:.2rem .55rem;border-radius:4px;border:1px solid var(--line);background:var(--bg);color:var(--ink2);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.pi.cur{background:var(--gold);color:#fff;border-color:var(--gold)}
+.pi.done{opacity:.32}
+
+/* COMPLETE OVERLAY */
+.ov{display:none;position:fixed;inset:0;background:rgba(246,243,237,.96);z-index:200;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem}
+.ov.show{display:flex}
+.ov-icon{font-size:2.8rem;margin-bottom:.7rem}
+.ov h2{font-family:'Instrument Serif',serif;font-size:1.85rem;font-weight:400;margin-bottom:.4rem}
+.ov p{font-size:.86rem;color:var(--ink2);margin-bottom:1.6rem;max-width:380px;line-height:1.7}
+.cs-row{display:flex;gap:1.1rem;margin-bottom:1.6rem;flex-wrap:wrap;justify-content:center}
+.cs{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.85rem 1.3rem;text-align:center}
+.cs-n{font-family:'Instrument Serif',serif;font-size:2rem;color:var(--gold)}
+.cs-l{font-size:.67rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-top:.15rem}
+.ov-btns{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center}
+
+/* CONFIRM MODAL */
+.conf-ov{display:none;position:fixed;inset:0;background:rgba(22,19,15,.45);z-index:300;align-items:center;justify-content:center;padding:1.5rem}
+.conf-ov.show{display:flex}
+.conf-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.75rem;max-width:360px;width:100%;text-align:center}
+.conf-box p{font-size:.9rem;color:var(--ink2);line-height:1.65;margin-bottom:1.4rem}
+.conf-btns{display:flex;gap:.6rem;justify-content:center}
+
+@keyframes su{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.an{animation:su .3s ease forwards}
+@keyframes sp2{0%,100%{opacity:1}50%{opacity:.45}}
+.spk{animation:sp2 1.1s ease-in-out infinite}
+
+@media(max-width:580px){
+  .db,.dh{padding-left:1.1rem;padding-right:1.1rem}
+  .sg{grid-template-columns:1fr 1fr}
+  .ptop{padding:.8rem 1.1rem}
+  .stage{padding:1.25rem 1rem}
+  .waves{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- DASHBOARD -->
+<div class="view on" id="vDash">
+  <div class="dh">
+    <div class="logo">Habla <em>Mastery</em></div>
+    <div class="stats">
+      <div class="pill">Mastered <b id="sTotalM">0</b> / <b id="sTotalAll">0</b></div>
+      <div class="pill">Day <b id="sDay">1</b></div>
+      <div class="pill">~<b id="sDays">100</b> days left</div>
+      <div class="pill" id="sSRS">Reviews due <b>0</b></div>
+    </div>
+  </div>
+  <div class="db">
+
+    <!-- Wave selector -->
+    <div class="sl" style="margin-bottom:.75rem">Choose your wave</div>
+    <div class="waves" id="waveCards"></div>
+
+    <!-- Today card -->
+    <div class="today-card">
+      <div>
+        <h2 id="tHead">Select a wave to begin</h2>
+        <p id="tDesc">Each wave covers a difficulty level across all topics. Work through each wave completely before moving to the next.</p>
+      </div>
+      <div class="today-right">
+        <div class="bi" id="bInfo">—</div>
+        <button class="btn-start" id="btnStart" onclick="startSession()" disabled>▶ Start Session</button>
+      </div>
+    </div>
+
+    <!-- Overall progress bar -->
+    <div class="ph"><h3>Total progress</h3><span id="pText">0 / 0</span></div>
+    <div class="pt"><div class="pf" id="pFill" style="width:0%"></div></div>
+
+    <!-- Settings -->
+    <div class="sl">Session settings</div>
+    <div class="sg">
+      <div class="ctrl">
+        <label>Sentences per day</label>
+        <input type="number" id="sDaily" value="10" min="5" max="50" onchange="saveS()">
+      </div>
+      <div class="ctrl">
+        <label>Repeats per sentence</label>
+        <div class="sr">
+          <input type="range" id="sRep" min="1" max="10" value="5" oninput="document.getElementById('sRepV').textContent=this.value+'x';saveS()">
+          <span class="sv" id="sRepV">5x</span>
+        </div>
+      </div>
+      <div class="ctrl">
+        <label>Pause (seconds)</label>
+        <div class="sr">
+          <input type="range" id="sPause" min="1" max="12" value="4" oninput="document.getElementById('sPauseV').textContent=this.value+'s';saveS()">
+          <span class="sv" id="sPauseV">4s</span>
+        </div>
+      </div>
+      <div class="ctrl">
+        <label>Speed</label>
+        <div class="sr">
+          <input type="range" id="sRate" min="0.5" max="1.2" value="0.8" step="0.05" oninput="document.getElementById('sRateV').textContent=parseFloat(this.value).toFixed(2);saveS()">
+          <span class="sv" id="sRateV">0.80</span>
+        </div>
+      </div>
+      <div class="ctrl">
+        <label>Auto-play (hands-free)</label>
+        <select id="sAuto">
+          <option value="0">Off — manual control</option>
+          <option value="1">On — drives itself</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>Spanish voice</label>
+        <select id="sVoice" style="max-width:200px;"></select>
+      </div>
+      <div class="ctrl" style="align-self:flex-end">
+        <button class="btn-g d" onclick="confirmReset()">Reset wave progress</button>
+      </div>
+    </div>
+
+    <!-- Batch preview -->
+    <div class="batch-head">
+      <div class="batch-title" id="batchLabel">Today's 10 sentences</div>
+      <div class="batch-meta" id="batchMeta"></div>
+    </div>
+    <div class="bgrid" id="bGrid"></div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="view" id="vPlayer">
+  <div class="ptop">
+    <div class="ptitle" id="ptitle">SESSION</div>
+    <div class="pbar-row">
+      <div class="pbar-wrap"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+      <div class="pbar-lbl" id="pbarLbl">0/0</div>
+    </div>
+    <div class="sp-dots" id="spDots"></div>
+    <div class="topbtns">
+      <label class="tog-wrap" onclick="toggleTrans()">
+        <div class="tog-box on" id="togBox"></div>Translation
+      </label>
+      <button class="btn-sm" id="autoBtn" onclick="toggleAutoplay()">⏩ Auto: Off</button>
+      <button class="btn-sm exit" onclick="exitSession()">✕ Exit</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="topic-crumb" id="topicCrumb"></div>
+    <div class="snum" id="sNum">1 / 10</div>
+    <div id="autoBanner" style="display:none"><div class="auto-banner"><div class="auto-dot"></div>Hands-free</div></div>
+    <div class="lvl lv1" id="lvlBadge">A1</div>
+    <div class="sp-es" id="esText">—</div>
+    <div class="sp-en" id="enText"></div>
+    <div class="pips" id="pipRow"></div>
+    <button class="play-ring" id="btnPlay" onclick="togglePlay()">▶</button>
+    <div class="navrow">
+      <button class="nav-btn" id="btnPrev" onclick="prevS()" disabled>←</button>
+      <button class="nav-btn" onclick="replayS()" title="Replay">↺</button>
+      <button class="nav-btn" id="btnNext" onclick="nextS()">→</button>
+    </div>
+    <div class="status" id="statusTxt">Press play to begin</div>
+    <div class="mrow">
+      <button class="btn-got" id="btnGot" onclick="markMastered()">✓ Got it — next</button>
+      <button class="btn-again" onclick="replayS()">↺ Replay</button>
+    </div>
+  </div>
+
+  <div class="peek">
+    <div class="peek-l">Session queue</div>
+    <div class="peek-list" id="peekList"></div>
+  </div>
+</div>
+
+<!-- COMPLETE -->
+<div class="ov" id="ovComplete">
+  <div class="ov-icon">🎯</div>
+  <h2>Session complete</h2>
+  <p id="ovMsg">Come back tomorrow. Consistency is everything.</p>
+  <div class="cs-row">
+    <div class="cs"><div class="cs-n" id="csDone">0</div><div class="cs-l">Sentences today</div></div>
+    <div class="cs"><div class="cs-n" id="csGot">0</div><div class="cs-l">Marked mastered</div></div>
+    <div class="cs"><div class="cs-n" id="csAll">0</div><div class="cs-l">Total mastered</div></div>
+    <div class="cs"><div class="cs-n" id="csDaysLeft">0</div><div class="cs-l">Days left</div></div>
+  </div>
+  <div class="ov-btns">
+    <button class="btn-start" onclick="closeOv()">← Dashboard</button>
+    <button class="btn-again" style="padding:.7rem 1.35rem" onclick="repeatSess()">↺ Repeat session</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="conf-ov" id="ovConfirm">
+  <div class="conf-box">
+    <p id="confMsg">Are you sure?</p>
+    <div class="conf-btns">
+      <button class="btn-start" id="confYes">Yes</button>
+      <button class="btn-again" style="padding:.6rem 1.2rem" onclick="closeConf()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var WAVES=[{"id":"w1","name":"Wave 1 — Survival Spanish","sub":"A1 · Days 1–30 · Essential phrases to function from day one","color":"#2a6348","bg":"#e8f4ee","d":1,"badge":"A1","sentences":[{"es":"Hola.","en":"Hello.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Buenos días.","en":"Good morning.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Buenas tardes.","en":"Good afternoon.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Buenas noches.","en":"Good evening.","topic":"Greetings & Farewells","icon":"👋"},{"es":"¿Cómo estás?","en":"How are you?","topic":"Greetings & Farewells","icon":"👋"},{"es":"Estoy bien, gracias.","en":"I'm fine, thank you.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Adiós.","en":"Goodbye.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Hasta luego.","en":"See you later.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Hasta mañana.","en":"See you tomorrow.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Por favor.","en":"Please.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Gracias.","en":"Thank you.","topic":"Greetings & Farewells","icon":"👋"},{"es":"De nada.","en":"You're welcome.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Perdón.","en":"Sorry.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Disculpe.","en":"Excuse me.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Me llamo Ana.","en":"My name is Ana.","topic":"Introductions","icon":"🙋"},{"es":"¿Cómo te llamas?","en":"What is your name?","topic":"Introductions","icon":"🙋"},{"es":"Soy de México.","en":"I am from Mexico.","topic":"Introductions","icon":"🙋"},{"es":"Tengo veinte años.","en":"I am twenty years old.","topic":"Introductions","icon":"🙋"},{"es":"Soy estudiante.","en":"I am a student.","topic":"Introductions","icon":"🙋"},{"es":"Vivo en Madrid.","en":"I live in Madrid.","topic":"Introductions","icon":"🙋"},{"es":"Hablo inglés y español.","en":"I speak English and Spanish.","topic":"Introductions","icon":"🙋"},{"es":"Estudio español.","en":"I study Spanish.","topic":"Introductions","icon":"🙋"},{"es":"Son las tres de la tarde.","en":"It is three in the afternoon.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"¿Qué hora es?","en":"What time is it?","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Hoy es lunes.","en":"Today is Monday.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Mañana es martes.","en":"Tomorrow is Tuesday.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Son las ocho y media.","en":"It is half past eight.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"A las nueve en punto.","en":"At nine o'clock sharp.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"El mes de enero.","en":"The month of January.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Hay treinta días en un mes.","en":"There are thirty days in a month.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Mi madre se llama Ana.","en":"My mother's name is Ana.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Tengo un hermano.","en":"I have one brother.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Mi padre trabaja mucho.","en":"My father works a lot.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Mis abuelos viven en el campo.","en":"My grandparents live in the countryside.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Ella es mi novia.","en":"She is my girlfriend.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Somos una familia grande.","en":"We are a big family.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Mi tío es muy divertido.","en":"My uncle is very funny.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Tengo hambre.","en":"I am hungry.","topic":"Food & Eating","icon":"🍽️"},{"es":"Tengo sed.","en":"I am thirsty.","topic":"Food & Eating","icon":"🍽️"},{"es":"Quiero un café, por favor.","en":"I want a coffee, please.","topic":"Food & Eating","icon":"🍽️"},{"es":"La cuenta, por favor.","en":"The bill, please.","topic":"Food & Eating","icon":"🍽️"},{"es":"¿Tiene mesa para dos?","en":"Do you have a table for two?","topic":"Food & Eating","icon":"🍽️"},{"es":"Me gusta la pizza.","en":"I like pizza.","topic":"Food & Eating","icon":"🍽️"},{"es":"No como carne.","en":"I don't eat meat.","topic":"Food & Eating","icon":"🍽️"},{"es":"¿Cuánto cuesta?","en":"How much does it cost?","topic":"Shopping & Money","icon":"🛍️"},{"es":"Es muy caro.","en":"It is very expensive.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Es barato.","en":"It is cheap.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Quiero comprar esto.","en":"I want to buy this.","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Aceptan tarjeta?","en":"Do you accept cards?","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Dónde está la caja?","en":"Where is the checkout?","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Dónde está el metro?","en":"Where is the subway?","topic":"Getting Around","icon":"🚌"},{"es":"Quiero ir al aeropuerto.","en":"I want to go to the airport.","topic":"Getting Around","icon":"🚌"},{"es":"¿Está lejos?","en":"Is it far?","topic":"Getting Around","icon":"🚌"},{"es":"Gire a la derecha.","en":"Turn right.","topic":"Getting Around","icon":"🚌"},{"es":"Gire a la izquierda.","en":"Turn left.","topic":"Getting Around","icon":"🚌"},{"es":"Siga recto.","en":"Go straight.","topic":"Getting Around","icon":"🚌"},{"es":"Tome el autobús número cinco.","en":"Take bus number five.","topic":"Getting Around","icon":"🚌"},{"es":"Me duele la cabeza.","en":"My head hurts.","topic":"Health & Body","icon":"🏥"},{"es":"Estoy enfermo.","en":"I am sick.","topic":"Health & Body","icon":"🏥"},{"es":"Necesito un médico.","en":"I need a doctor.","topic":"Health & Body","icon":"🏥"},{"es":"Llame a una ambulancia.","en":"Call an ambulance.","topic":"Health & Body","icon":"🏥"},{"es":"Tengo fiebre.","en":"I have a fever.","topic":"Health & Body","icon":"🏥"},{"es":"Me duele el estómago.","en":"My stomach hurts.","topic":"Health & Body","icon":"🏥"},{"es":"Vivo en un apartamento.","en":"I live in an apartment.","topic":"Home & Housing","icon":"🏠"},{"es":"Mi casa es pequeña.","en":"My house is small.","topic":"Home & Housing","icon":"🏠"},{"es":"Tengo dos habitaciones.","en":"I have two bedrooms.","topic":"Home & Housing","icon":"🏠"},{"es":"El baño está al final del pasillo.","en":"The bathroom is at the end of the hall.","topic":"Home & Housing","icon":"🏠"},{"es":"La cocina es moderna.","en":"The kitchen is modern.","topic":"Home & Housing","icon":"🏠"},{"es":"Trabajo en una oficina.","en":"I work in an office.","topic":"Work & Career","icon":"💼"},{"es":"Mi jefe es muy exigente.","en":"My boss is very demanding.","topic":"Work & Career","icon":"💼"},{"es":"Empiezo a trabajar a las nueve.","en":"I start work at nine.","topic":"Work & Career","icon":"💼"},{"es":"Tengo reunión a las once.","en":"I have a meeting at eleven.","topic":"Work & Career","icon":"💼"},{"es":"Busco trabajo.","en":"I'm looking for a job.","topic":"Work & Career","icon":"💼"},{"es":"Estoy feliz.","en":"I am happy.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Estoy triste.","en":"I am sad.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Tengo miedo.","en":"I am scared.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Estoy cansado.","en":"I am tired.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Estoy enfadado.","en":"I am angry.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Me siento bien.","en":"I feel good.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"¿Quieres salir mañana?","en":"Do you want to go out tomorrow?","topic":"Making Plans","icon":"📅"},{"es":"¿Qué haces el sábado?","en":"What are you doing on Saturday?","topic":"Making Plans","icon":"📅"},{"es":"Vamos al parque.","en":"Let's go to the park.","topic":"Making Plans","icon":"📅"},{"es":"Creo que sí.","en":"I think so.","topic":"Opinions & Arguments","icon":"💬"},{"es":"No lo sé.","en":"I don't know.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Tienes razón.","en":"You are right.","topic":"Opinions & Arguments","icon":"💬"},{"es":"No estoy de acuerdo.","en":"I disagree.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Me parece bien.","en":"I think that's fine.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Me despierto a las siete.","en":"I wake up at seven.","topic":"Daily Routines","icon":"☀️"},{"es":"Me ducho por la mañana.","en":"I shower in the morning.","topic":"Daily Routines","icon":"☀️"},{"es":"Desayuno cereales y fruta.","en":"I have cereal and fruit for breakfast.","topic":"Daily Routines","icon":"☀️"},{"es":"Salgo de casa a las ocho.","en":"I leave home at eight.","topic":"Daily Routines","icon":"☀️"},{"es":"Vuelvo a casa a las seis.","en":"I come home at six.","topic":"Daily Routines","icon":"☀️"},{"es":"Ceno a las nueve.","en":"I have dinner at nine.","topic":"Daily Routines","icon":"☀️"},{"es":"Me acuesto a las once.","en":"I go to bed at eleven.","topic":"Daily Routines","icon":"☀️"},{"es":"Me lavo los dientes.","en":"I brush my teeth.","topic":"Daily Routines","icon":"☀️"},{"es":"Quiero reservar una habitación.","en":"I want to book a room.","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿Tiene habitaciones libres?","en":"Do you have any rooms available?","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿Dónde está el hotel?","en":"Where is the hotel?","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿A qué hora es el desayuno?","en":"What time is breakfast?","topic":"Travel & Tourism","icon":"✈️"},{"es":"Mi pasaporte, por favor.","en":"My passport, please.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Quiero visitar el museo.","en":"I want to visit the museum.","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿Tienes wifi?","en":"Do you have wifi?","topic":"Technology","icon":"📱"},{"es":"¿Cuál es la contraseña?","en":"What is the password?","topic":"Technology","icon":"📱"},{"es":"Se me agotó la batería.","en":"My battery died.","topic":"Technology","icon":"📱"},{"es":"Voy a mandarte un mensaje.","en":"I'm going to send you a message.","topic":"Technology","icon":"📱"},{"es":"Yo tengo un libro.","en":"I have a book.","topic":"Essential Grammar","icon":"📚"},{"es":"Ella habla español.","en":"She speaks Spanish.","topic":"Essential Grammar","icon":"📚"},{"es":"Nosotros comemos juntos.","en":"We eat together.","topic":"Essential Grammar","icon":"📚"},{"es":"No quiero ir.","en":"I don't want to go.","topic":"Essential Grammar","icon":"📚"},{"es":"Puedo ayudarte.","en":"I can help you.","topic":"Essential Grammar","icon":"📚"},{"es":"Tengo que estudiar.","en":"I have to study.","topic":"Essential Grammar","icon":"📚"},{"es":"Me gusta leer.","en":"I like to read.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Juego al fútbol.","en":"I play soccer.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Me encanta la música.","en":"I love music.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Veo la televisión.","en":"I watch television.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Salgo con mis amigos.","en":"I go out with my friends.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Cocino en mi tiempo libre.","en":"I cook in my free time.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"¿Me puede traer la carta?","en":"Can you bring me the menu?","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Primero me levanto, luego desayuno.","en":"First I get up, then I have breakfast.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Pero no quiero ir.","en":"But I don't want to go.","topic":"Connectors & Flow","icon":"🔗"},{"es":"También me gusta el fútbol.","en":"I also like soccer.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Porque estoy cansado.","en":"Because I am tired.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Y después salimos.","en":"And then we went out.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Hace calor.","en":"It is hot.","topic":"Weather & Environment","icon":"🌱"},{"es":"Hace frío.","en":"It is cold.","topic":"Weather & Environment","icon":"🌱"},{"es":"Llueve.","en":"It is raining.","topic":"Weather & Environment","icon":"🌱"},{"es":"Hace sol.","en":"It is sunny.","topic":"Weather & Environment","icon":"🌱"},{"es":"Está nublado.","en":"It is cloudy.","topic":"Weather & Environment","icon":"🌱"},{"es":"Nieva en invierno.","en":"It snows in winter.","topic":"Weather & Environment","icon":"🌱"},{"es":"¿Qué tiempo hace?","en":"What is the weather like?","topic":"Weather & Environment","icon":"🌱"},{"es":"La vida es corta.","en":"Life is short.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"El tiempo es valioso.","en":"Time is valuable.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La felicidad es importante.","en":"Happiness is important.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Voy a la escuela.","en":"I go to school.","topic":"Education & Learning","icon":"🎓"},{"es":"Estudio inglés.","en":"I study English.","topic":"Education & Learning","icon":"🎓"},{"es":"Mi profesor es muy bueno.","en":"My teacher is very good.","topic":"Education & Learning","icon":"🎓"},{"es":"Tengo un examen mañana.","en":"I have an exam tomorrow.","topic":"Education & Learning","icon":"🎓"},{"es":"¿Puedes repetir, por favor?","en":"Can you repeat, please?","topic":"Education & Learning","icon":"🎓"},{"es":"No entiendo.","en":"I don't understand.","topic":"Education & Learning","icon":"🎓"},{"es":"Me gusta nadar.","en":"I like to swim.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Juego al tenis.","en":"I play tennis.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Corro cinco kilómetros cada día.","en":"I run five kilometres every day.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El partido empieza a las cuatro.","en":"The match starts at four.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Mi equipo favorito ganó.","en":"My favourite team won.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Me gusta esta canción.","en":"I like this song.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"¿Cuál es tu película favorita?","en":"What is your favourite movie?","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Leo el periódico por la mañana.","en":"I read the newspaper in the morning.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"¡Ayuda!","en":"Help!","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Tengo un problema.","en":"I have a problem.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"No entiendo.","en":"I don't understand.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"¿Me puede ayudar?","en":"Can you help me?","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Me he perdido.","en":"I'm lost.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"He olvidado mi cartera.","en":"I forgot my wallet.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Está al lado del banco.","en":"It's next to the bank.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Está enfrente del parque.","en":"It's in front of the park.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Está detrás de la iglesia.","en":"It's behind the church.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Sube las escaleras.","en":"Go up the stairs.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Hago ejercicio cada día.","en":"I exercise every day.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Doy un paseo por la tarde.","en":"I take a walk in the afternoon.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Pongo la mesa.","en":"I set the table.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Traigo el desayuno.","en":"I bring breakfast.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Salgo a las ocho.","en":"I leave at eight.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Vengo de trabajar.","en":"I'm coming from work.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"España tiene muchas regiones diferentes.","en":"Spain has many different regions.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El español se habla en muchos países.","en":"Spanish is spoken in many countries.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"La paella es un plato típico español.","en":"Paella is a typical Spanish dish.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El flamenco es un baile muy famoso.","en":"Flamenco is a very famous dance.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"Llevo unos vaqueros y una camiseta.","en":"I'm wearing jeans and a t-shirt.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Me pongo el abrigo porque hace frío.","en":"I put on my coat because it's cold.","topic":"Clothes & Fashion","icon":"👗"},{"es":"¿Qué talla usas?","en":"What size do you wear?","topic":"Clothes & Fashion","icon":"👗"},{"es":"Estas zapatillas son muy cómodas.","en":"These trainers are very comfortable.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Me gusta la ropa de colores.","en":"I like colourful clothes.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Tengo un perro y un gato.","en":"I have a dog and a cat.","topic":"Animals & Nature","icon":"🐾"},{"es":"El pájaro canta muy bien.","en":"The bird sings very well.","topic":"Animals & Nature","icon":"🐾"},{"es":"El oso es un animal grande.","en":"The bear is a large animal.","topic":"Animals & Nature","icon":"🐾"},{"es":"El bosque es muy bonito.","en":"The forest is very beautiful.","topic":"Animals & Nature","icon":"🐾"},{"es":"El río corre hacia el mar.","en":"The river flows toward the sea.","topic":"Animals & Nature","icon":"🐾"},{"es":"Las flores huelen muy bien.","en":"The flowers smell very nice.","topic":"Animals & Nature","icon":"🐾"},{"es":"¿Tienen mesa para tres personas?","en":"Do you have a table for three?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Quiero el menú del día.","en":"I want the set menu.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Para mí, la ensalada.","en":"For me, the salad.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"¿Qué nos recomienda?","en":"What do you recommend?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Sin sal, por favor.","en":"Without salt, please.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Él es alto y delgado.","en":"He is tall and slim.","topic":"Describing People & Things","icon":"📝"},{"es":"Ella tiene el pelo largo.","en":"She has long hair.","topic":"Describing People & Things","icon":"📝"},{"es":"Él tiene los ojos azules.","en":"He has blue eyes.","topic":"Describing People & Things","icon":"📝"},{"es":"Mi madre es muy amable.","en":"My mother is very kind.","topic":"Describing People & Things","icon":"📝"},{"es":"Él es simpático y divertido.","en":"He is friendly and fun.","topic":"Describing People & Things","icon":"📝"},{"es":"¿De qué trabajas?","en":"What do you do for work?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Tienes hermanos?","en":"Do you have siblings?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Cuál es tu comida favorita?","en":"What is your favourite food?","topic":"Conversation Starters","icon":"💡"},{"es":"Hasta la próxima.","en":"Until next time.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Cuídate mucho.","en":"Take care.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Buen viaje.","en":"Have a good trip.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Que te vaya bien.","en":"I hope things go well for you.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Nos vemos pronto.","en":"See you soon.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Estudio español desde hace un año.","en":"I have been studying Spanish for a year.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"El español es bonito.","en":"Spanish is beautiful.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"No hablo español muy bien.","en":"I don't speak Spanish very well.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Entiendo un poco.","en":"I understand a little.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"¿Puede hablar más despacio?","en":"Can you speak more slowly?","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Voy a llamarte manana.","en":"I am going to call you tomorrow.","topic":"Future and Conditional","icon":"⏩"},{"es":"Mi asignatura favorita es matematicas.","en":"My favourite subject is maths.","topic":"School and Academic Life","icon":"🏫"},{"es":"Tengo clase de biologia a las diez.","en":"I have biology class at ten.","topic":"School and Academic Life","icon":"🏫"},{"es":"El recreo es a las once.","en":"Break time is at eleven.","topic":"School and Academic Life","icon":"🏫"},{"es":"Tenemos una excursion el jueves.","en":"We have a school trip on Thursday.","topic":"School and Academic Life","icon":"🏫"},{"es":"Es grande.","en":"It is big.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Es pequeno.","en":"It is small.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Es muy bonito.","en":"It is very beautiful.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Es facil.","en":"It is easy.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Es dificil.","en":"It is difficult.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"De que trabajas?","en":"What do you do for work?","topic":"Conversation Starters","icon":"💡"},{"es":"Tienes hermanos?","en":"Do you have siblings?","topic":"Conversation Starters","icon":"💡"},{"es":"Cual es tu comida favorita?","en":"What is your favourite food?","topic":"Conversation Starters","icon":"💡"},{"es":"Hasta la proxima.","en":"Until next time.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Cuidate mucho.","en":"Take care.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Buen viaje.","en":"Have a good trip.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Que te vaya bien.","en":"I hope things go well for you.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Nos vemos pronto.","en":"See you soon.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Estudio espanol desde hace un anno.","en":"I have been studying Spanish for a year.","topic":"Language Learning","icon":"🌐"},{"es":"El espanol es bonito.","en":"Spanish is beautiful.","topic":"Language Learning","icon":"🌐"},{"es":"No hablo espanol muy bien.","en":"I do not speak Spanish very well.","topic":"Language Learning","icon":"🌐"},{"es":"Entiendo un poco.","en":"I understand a little.","topic":"Language Learning","icon":"🌐"},{"es":"Puede hablar mas despacio?","en":"Can you speak more slowly?","topic":"Language Learning","icon":"🌐"}]},{"id":"w2","name":"Wave 2 — Everyday Life","sub":"A2 · Days 31–60 · Build real conversations","color":"#1a4a8a","bg":"#e0eaf8","d":2,"badge":"A2","sentences":[{"es":"¿Qué tal?","en":"How's it going?","topic":"Greetings & Farewells","icon":"👋"},{"es":"Más o menos.","en":"So-so.","topic":"Greetings & Farewells","icon":"👋"},{"es":"¡Mucho gusto!","en":"Nice to meet you!","topic":"Greetings & Farewells","icon":"👋"},{"es":"El gusto es mío.","en":"The pleasure is mine.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Hasta pronto.","en":"See you soon.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Nos vemos mañana.","en":"See you tomorrow.","topic":"Greetings & Farewells","icon":"👋"},{"es":"Soy casado.","en":"I am married.","topic":"Introductions","icon":"🙋"},{"es":"Tengo dos hijos.","en":"I have two children.","topic":"Introductions","icon":"🙋"},{"es":"Trabajo en una empresa.","en":"I work at a company.","topic":"Introductions","icon":"🙋"},{"es":"Me interesa la música.","en":"I am interested in music.","topic":"Introductions","icon":"🙋"},{"es":"Tengo una cita a las dos.","en":"I have an appointment at two.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"La reunión es el viernes.","en":"The meeting is on Friday.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Son las tres menos cuarto.","en":"It is quarter to three.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Dentro de dos semanas.","en":"In two weeks.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Nací en mil novecientos noventa.","en":"I was born in 1990.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Me llevo bien con mi hermana.","en":"I get along well with my sister.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Mis padres están divorciados.","en":"My parents are divorced.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Vivo con mi familia.","en":"I live with my family.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Mi prima vive en otro país.","en":"My cousin lives in another country.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Ellos se casaron el año pasado.","en":"They got married last year.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"¿Cuál es el plato del día?","en":"What is today's special?","topic":"Food & Eating","icon":"🍽️"},{"es":"Está delicioso.","en":"It is delicious.","topic":"Food & Eating","icon":"🍽️"},{"es":"¿Me puede traer agua?","en":"Can you bring me water?","topic":"Food & Eating","icon":"🍽️"},{"es":"Prefiero la comida picante.","en":"I prefer spicy food.","topic":"Food & Eating","icon":"🍽️"},{"es":"El desayuno está incluido.","en":"Breakfast is included.","topic":"Food & Eating","icon":"🍽️"},{"es":"Necesito un recibo.","en":"I need a receipt.","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Tienen talla grande?","en":"Do you have a large size?","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Hay descuento?","en":"Is there a discount?","topic":"Shopping & Money","icon":"🛍️"},{"es":"Me lo llevo.","en":"I'll take it.","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Puedo probármelo?","en":"Can I try it on?","topic":"Shopping & Money","icon":"🛍️"},{"es":"Lo voy a pagar en efectivo.","en":"I'll pay in cash.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Un billete de ida y vuelta.","en":"A round-trip ticket.","topic":"Getting Around","icon":"🚌"},{"es":"¿A qué hora sale el tren?","en":"What time does the train leave?","topic":"Getting Around","icon":"🚌"},{"es":"¿Cuánto tarda en llegar?","en":"How long does it take to arrive?","topic":"Getting Around","icon":"🚌"},{"es":"El vuelo tiene retraso.","en":"The flight is delayed.","topic":"Getting Around","icon":"🚌"},{"es":"Necesito un taxi.","en":"I need a taxi.","topic":"Getting Around","icon":"🚌"},{"es":"Soy alérgico a la penicilina.","en":"I am allergic to penicillin.","topic":"Health & Body","icon":"🏥"},{"es":"¿Dónde está la farmacia?","en":"Where is the pharmacy?","topic":"Health & Body","icon":"🏥"},{"es":"Necesito una receta.","en":"I need a prescription.","topic":"Health & Body","icon":"🏥"},{"es":"Tomo esta medicina dos veces al día.","en":"I take this medicine twice a day.","topic":"Health & Body","icon":"🏥"},{"es":"Me corté el dedo.","en":"I cut my finger.","topic":"Health & Body","icon":"🏥"},{"es":"Me torcí el tobillo.","en":"I sprained my ankle.","topic":"Health & Body","icon":"🏥"},{"es":"Hay un jardín detrás de la casa.","en":"There is a garden behind the house.","topic":"Home & Housing","icon":"🏠"},{"es":"El alquiler es caro.","en":"The rent is expensive.","topic":"Home & Housing","icon":"🏠"},{"es":"Busco un piso de dos dormitorios.","en":"I'm looking for a two-bedroom flat.","topic":"Home & Housing","icon":"🏠"},{"es":"Pago el alquiler mensualmente.","en":"I pay rent monthly.","topic":"Home & Housing","icon":"🏠"},{"es":"Los vecinos son muy amables.","en":"The neighbours are very kind.","topic":"Home & Housing","icon":"🏠"},{"es":"Estoy en paro.","en":"I am unemployed.","topic":"Work & Career","icon":"💼"},{"es":"Me han ascendido.","en":"I've been promoted.","topic":"Work & Career","icon":"💼"},{"es":"Voy a enviar mi currículum.","en":"I'm going to send my CV.","topic":"Work & Career","icon":"💼"},{"es":"Trabajo a tiempo parcial.","en":"I work part-time.","topic":"Work & Career","icon":"💼"},{"es":"Tengo mañana de vacaciones.","en":"I have tomorrow off.","topic":"Work & Career","icon":"💼"},{"es":"Estoy emocionado.","en":"I am excited.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Me pone nervioso.","en":"It makes me nervous.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Estoy sorprendido.","en":"I am surprised.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Me da vergüenza.","en":"I feel embarrassed.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Me siento solo.","en":"I feel lonely.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Estoy orgulloso de ti.","en":"I am proud of you.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"¿Te apetece ir al cine?","en":"Do you feel like going to the movies?","topic":"Making Plans","icon":"📅"},{"es":"Quedamos a las siete.","en":"Let's meet at seven.","topic":"Making Plans","icon":"📅"},{"es":"Lo siento, no puedo.","en":"I'm sorry, I can't.","topic":"Making Plans","icon":"📅"},{"es":"¿Por qué no vamos juntos?","en":"Why don't we go together?","topic":"Making Plans","icon":"📅"},{"es":"Te invito a cenar.","en":"I'm inviting you to dinner.","topic":"Making Plans","icon":"📅"},{"es":"Estoy de acuerdo contigo.","en":"I agree with you.","topic":"Opinions & Arguments","icon":"💬"},{"es":"En mi opinión, es importante.","en":"In my opinion, it is important.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Depende de la situación.","en":"It depends on the situation.","topic":"Opinions & Arguments","icon":"💬"},{"es":"No me convence.","en":"I'm not convinced.","topic":"Opinions & Arguments","icon":"💬"},{"es":"¿Qué piensas tú?","en":"What do you think?","topic":"Opinions & Arguments","icon":"💬"},{"es":"¡Qué va!","en":"No way!","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"¡Venga!","en":"Come on! Sure!","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"¡Qué rollo!","en":"What a bore!","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"¡Qué guay!","en":"How cool!","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Mola mucho.","en":"It's really cool.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"No pasa nada.","en":"No worries.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"A ver.","en":"Let's see.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Leo antes de dormir.","en":"I read before sleeping.","topic":"Daily Routines","icon":"☀️"},{"es":"Hago ejercicio por la mañana.","en":"I exercise in the morning.","topic":"Daily Routines","icon":"☀️"},{"es":"Escucho música mientras cocino.","en":"I listen to music while I cook.","topic":"Daily Routines","icon":"☀️"},{"es":"Los lunes siempre estoy cansado.","en":"I'm always tired on Mondays.","topic":"Daily Routines","icon":"☀️"},{"es":"Preparo el almuerzo antes del trabajo.","en":"I prepare lunch before work.","topic":"Daily Routines","icon":"☀️"},{"es":"¿Dónde puedo cambiar dinero?","en":"Where can I exchange money?","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿Está incluido el desayuno?","en":"Is breakfast included?","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿Me puede hacer una foto?","en":"Can you take a photo of me?","topic":"Travel & Tourism","icon":"✈️"},{"es":"¿Qué lugares recomienda visitar?","en":"What places do you recommend?","topic":"Travel & Tourism","icon":"✈️"},{"es":"Comparto fotos en Instagram.","en":"I share photos on Instagram.","topic":"Technology","icon":"📱"},{"es":"Descargo aplicaciones en mi teléfono.","en":"I download apps on my phone.","topic":"Technology","icon":"📱"},{"es":"La aplicación no funciona.","en":"The app is not working.","topic":"Technology","icon":"📱"},{"es":"Tengo que actualizar el sistema.","en":"I need to update the system.","topic":"Technology","icon":"📱"},{"es":"¿Me puedes llamar por videollamada?","en":"Can you video call me?","topic":"Technology","icon":"📱"},{"es":"Quiero que vengas.","en":"I want you to come.","topic":"Essential Grammar","icon":"📚"},{"es":"Ayer fui al supermercado.","en":"Yesterday I went to the supermarket.","topic":"Essential Grammar","icon":"📚"},{"es":"Hace dos años que vivo aquí.","en":"I've been living here for two years.","topic":"Essential Grammar","icon":"📚"},{"es":"¿Dónde están mis llaves?","en":"Where are my keys?","topic":"Essential Grammar","icon":"📚"},{"es":"Toco la guitarra.","en":"I play the guitar.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Me gusta ir de excursión.","en":"I like going hiking.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Voy al gimnasio tres veces por semana.","en":"I go to the gym three times a week.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Me apasiona la fotografía.","en":"I am passionate about photography.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"¿Podría abrir la ventana?","en":"Could you open the window?","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"¿Le importa si me siento aquí?","en":"Do you mind if I sit here?","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Tenga la bondad de esperar.","en":"Please be so kind as to wait.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Sin embargo, no lo hice.","en":"However, I didn't do it.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Además, hay otro problema.","en":"Furthermore, there is another problem.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Por eso me fui.","en":"That is why I left.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Aunque llueve, salimos.","en":"Even though it's raining, we're going out.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Necesito un paraguas.","en":"I need an umbrella.","topic":"Weather & Environment","icon":"🌱"},{"es":"La temperatura es de treinta grados.","en":"The temperature is thirty degrees.","topic":"Weather & Environment","icon":"🌱"},{"es":"Va a hacer viento.","en":"It is going to be windy.","topic":"Weather & Environment","icon":"🌱"},{"es":"Todos cometemos errores.","en":"We all make mistakes.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Aprendemos de la experiencia.","en":"We learn from experience.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"El cambio es difícil pero necesario.","en":"Change is difficult but necessary.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"El dinero no lo es todo.","en":"Money isn't everything.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Cada persona es diferente.","en":"Every person is different.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"El respeto es fundamental.","en":"Respect is fundamental.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La paciencia es una virtud.","en":"Patience is a virtue.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"¿Qué significa esta palabra?","en":"What does this word mean?","topic":"Education & Learning","icon":"🎓"},{"es":"Leo libros en español.","en":"I read books in Spanish.","topic":"Education & Learning","icon":"🎓"},{"es":"Hago los deberes por la tarde.","en":"I do homework in the afternoon.","topic":"Education & Learning","icon":"🎓"},{"es":"Saqué buena nota.","en":"I got a good grade.","topic":"Education & Learning","icon":"🎓"},{"es":"Entreno tres días a la semana.","en":"I train three days a week.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Me lesioné la rodilla jugando.","en":"I injured my knee while playing.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El ciclismo es muy popular aquí.","en":"Cycling is very popular here.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Hago yoga para relajarme.","en":"I do yoga to relax.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El estadio estaba lleno.","en":"The stadium was full.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Voy al teatro este fin de semana.","en":"I'm going to the theatre this weekend.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"La exposición está abierta hasta el domingo.","en":"The exhibition is open until Sunday.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Escucho podcasts en español.","en":"I listen to podcasts in Spanish.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"¿Puede hablar más despacio?","en":"Can you speak more slowly?","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"No funciona.","en":"It's not working.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Se me ha roto el móvil.","en":"My phone broke.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"¿Me puede escribir eso?","en":"Can you write that down for me?","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Es la segunda calle a la derecha.","en":"It's the second street on the right.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Cruce el puente.","en":"Cross the bridge.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Está a cinco minutos andando.","en":"It's five minutes on foot.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Siga recto hasta el semáforo.","en":"Go straight until the traffic light.","topic":"Directions & Locations","icon":"🗺️"},{"es":"¿Hay una parada de metro cerca?","en":"Is there a subway stop nearby?","topic":"Directions & Locations","icon":"🗺️"},{"es":"Está en la planta baja.","en":"It's on the ground floor.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Sé la respuesta.","en":"I know the answer.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Conozco a su hermana.","en":"I know his sister.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Le doy las gracias.","en":"I thank him.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Seguimos el camino.","en":"We follow the path.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Buenos días, ¿en qué le puedo ayudar?","en":"Good morning, how can I help you?","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Tengo una cita con el señor García.","en":"I have an appointment with Mr García.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"¿Puede dejarle un mensaje?","en":"Can you leave him a message?","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Voy a la reunión de las tres.","en":"I'm going to the three o'clock meeting.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Necesito imprimir este documento.","en":"I need to print this document.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"México tiene una cultura muy rica.","en":"Mexico has a very rich culture.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El Día de los Muertos es una tradición mexicana.","en":"Day of the Dead is a Mexican tradition.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"Buenos Aires es la capital de Argentina.","en":"Buenos Aires is the capital of Argentina.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El vestido le queda muy bien.","en":"The dress suits her very well.","topic":"Clothes & Fashion","icon":"👗"},{"es":"¿Lo tienen en una talla más?","en":"Do you have it in a bigger size?","topic":"Clothes & Fashion","icon":"👗"},{"es":"Necesito ropa de deporte.","en":"I need sportswear.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Se me ha roto la cremallera.","en":"The zipper broke.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Hay una liquidación en esa tienda.","en":"There's a clearance sale in that store.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Vimos delfines en el mar.","en":"We saw dolphins in the sea.","topic":"Animals & Nature","icon":"🐾"},{"es":"El lobo vive en el bosque.","en":"The wolf lives in the forest.","topic":"Animals & Nature","icon":"🐾"},{"es":"Mi mascota es muy juguetona.","en":"My pet is very playful.","topic":"Animals & Nature","icon":"🐾"},{"es":"Los árboles pierden las hojas en otoño.","en":"Trees lose their leaves in autumn.","topic":"Animals & Nature","icon":"🐾"},{"es":"¿Cómo quiere la carne?","en":"How would you like your meat?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Poco hecha, por favor.","en":"Rare, please.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Pedimos dos refrescos y una cerveza.","en":"We ordered two soft drinks and a beer.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"¿Se puede pagar con tarjeta?","en":"Can we pay by card?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"¿El pan está incluido?","en":"Is bread included?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Ella es muy trabajadora.","en":"She is very hardworking.","topic":"Describing People & Things","icon":"📝"},{"es":"Él parece cansado hoy.","en":"He looks tired today.","topic":"Describing People & Things","icon":"📝"},{"es":"Es una persona muy responsable.","en":"He is a very responsible person.","topic":"Describing People & Things","icon":"📝"},{"es":"Tiene mucho sentido del humor.","en":"He has a great sense of humour.","topic":"Describing People & Things","icon":"📝"},{"es":"Es bastante tímida al principio.","en":"She is quite shy at first.","topic":"Describing People & Things","icon":"📝"},{"es":"¿A qué te dedicas?","en":"What do you do for a living?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué haces en tu tiempo libre?","en":"What do you do in your free time?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Has viajado mucho?","en":"Have you travelled a lot?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Cuál es tu película favorita?","en":"What is your favourite movie?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué música te gusta?","en":"What music do you like?","topic":"Conversation Starters","icon":"💡"},{"es":"Dale saludos a tu familia.","en":"Give my regards to your family.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido un placer.","en":"It has been a pleasure.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Que descanses.","en":"Rest well.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Hasta cuando quieras.","en":"Come back whenever you like.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Te echo de menos ya.","en":"I'll miss you already.","topic":"Saying Goodbye","icon":"🌅"},{"es":"¿Cómo se dice esto en español?","en":"How do you say this in Spanish?","topic":"Language Learning Talk","icon":"🗣️"},{"es":"¿Puedes repetirlo, por favor?","en":"Can you repeat it, please?","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Practico con hablantes nativos.","en":"I practise with native speakers.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Aprendo palabras nuevas cada día.","en":"I learn new words every day.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Veo películas en español para practicar.","en":"I watch movies in Spanish to practise.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Ayer comi paella.","en":"Yesterday I ate paella.","topic":"Past Tense","icon":"⏪"},{"es":"El lunes fui al cine.","en":"On Monday I went to the movies.","topic":"Past Tense","icon":"⏪"},{"es":"Ella llego tarde.","en":"She arrived late.","topic":"Past Tense","icon":"⏪"},{"es":"Compramos una casa nueva.","en":"We bought a new house.","topic":"Past Tense","icon":"⏪"},{"es":"No dormi bien anoche.","en":"I did not sleep well last night.","topic":"Past Tense","icon":"⏪"},{"es":"El verano que viene ire a Espana.","en":"Next summer I will go to Spain.","topic":"Future and Conditional","icon":"⏩"},{"es":"Que haras este fin de semana?","en":"What will you do this weekend?","topic":"Future and Conditional","icon":"⏩"},{"es":"Si hace bueno saldremos.","en":"If the weather is nice we will go out.","topic":"Future and Conditional","icon":"⏩"},{"es":"Tendre mas tiempo la semana que viene.","en":"I will have more time next week.","topic":"Future and Conditional","icon":"⏩"},{"es":"El examen de historia fue muy dificil.","en":"The history exam was very difficult.","topic":"School and Academic Life","icon":"🏫"},{"es":"Hice los deberes antes de cenar.","en":"I did my homework before dinner.","topic":"School and Academic Life","icon":"🏫"},{"es":"El profesor explico la leccion muy bien.","en":"The teacher explained the lesson very well.","topic":"School and Academic Life","icon":"🏫"},{"es":"Me suspendieron en quimica.","en":"I failed chemistry.","topic":"School and Academic Life","icon":"🏫"},{"es":"Voy a repetir el examen en septiembre.","en":"I am going to retake the exam in September.","topic":"School and Academic Life","icon":"🏫"},{"es":"Es mas barato que este.","en":"It is cheaper than this one.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Este es el mejor.","en":"This is the best one.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Son diferentes.","en":"They are different.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Son iguales.","en":"They are the same.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Prefiero el rojo al azul.","en":"I prefer red over blue.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"A que te dedicas?","en":"What do you do for a living?","topic":"Conversation Starters","icon":"💡"},{"es":"Que haces en tu tiempo libre?","en":"What do you do in your free time?","topic":"Conversation Starters","icon":"💡"},{"es":"Has viajado mucho?","en":"Have you travelled a lot?","topic":"Conversation Starters","icon":"💡"},{"es":"Cual es tu pelicula favorita?","en":"What is your favourite movie?","topic":"Conversation Starters","icon":"💡"},{"es":"Que musica te gusta?","en":"What music do you like?","topic":"Conversation Starters","icon":"💡"},{"es":"Dale saludos a tu familia.","en":"Give my regards to your family.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido un placer.","en":"It has been a pleasure.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Que descanses.","en":"Rest well.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Hasta cuando quieras.","en":"Come back whenever you like.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Te echo de menos ya.","en":"I will miss you already.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Como se dice esto en espanol?","en":"How do you say this in Spanish?","topic":"Language Learning","icon":"🌐"},{"es":"Puedes repetirlo por favor?","en":"Can you repeat it please?","topic":"Language Learning","icon":"🌐"},{"es":"Practico con hablantes nativos.","en":"I practise with native speakers.","topic":"Language Learning","icon":"🌐"},{"es":"Aprendo palabras nuevas cada dia.","en":"I learn new words every day.","topic":"Language Learning","icon":"🌐"},{"es":"Veo peliculas en espanol para practicar.","en":"I watch movies in Spanish to practise.","topic":"Language Learning","icon":"🌐"}]},{"id":"w3","name":"Wave 3 — Real Conversation","sub":"B1 · Days 61–90 · Speak with confidence","color":"#7a4f00","bg":"#fef3e0","d":3,"badge":"B1","sentences":[{"es":"Llevo tres años viviendo aquí.","en":"I've been living here for three years.","topic":"Introductions","icon":"🙋"},{"es":"Soy de habla inglesa.","en":"I am a native English speaker.","topic":"Introductions","icon":"🙋"},{"es":"Me dedico al diseño gráfico.","en":"I work in graphic design.","topic":"Introductions","icon":"🙋"},{"es":"Comparto piso con dos amigos.","en":"I share a flat with two friends.","topic":"Introductions","icon":"🙋"},{"es":"Hace tres días que no duermo bien.","en":"I haven't slept well for three days.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"A partir de ahora todo cambia.","en":"From now on everything changes.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Con frecuencia llego tarde.","en":"I often arrive late.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"El plazo termina el viernes.","en":"The deadline is Friday.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Tenemos una relación muy cercana.","en":"We have a very close relationship.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Mi familia me apoya mucho.","en":"My family supports me a lot.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Nos vemos en las fiestas.","en":"We see each other during holidays.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Soy alérgico al marisco.","en":"I am allergic to shellfish.","topic":"Food & Eating","icon":"🍽️"},{"es":"¿Me podría recomendar algo?","en":"Could you recommend something?","topic":"Food & Eating","icon":"🍽️"},{"es":"El servicio fue excelente.","en":"The service was excellent.","topic":"Food & Eating","icon":"🍽️"},{"es":"Preferiría algo sin gluten.","en":"I would prefer something gluten-free.","topic":"Food & Eating","icon":"🍽️"},{"es":"Hay una oferta esta semana.","en":"There is a sale this week.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Me gustaría hacer un cambio.","en":"I would like to make an exchange.","topic":"Shopping & Money","icon":"🛍️"},{"es":"El precio no incluye el IVA.","en":"The price does not include tax.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Prefiero comprar en línea.","en":"I prefer to shop online.","topic":"Shopping & Money","icon":"🛍️"},{"es":"¿Hay aparcamiento cerca?","en":"Is there parking nearby?","topic":"Getting Around","icon":"🚌"},{"es":"Perdí el tren.","en":"I missed the train.","topic":"Getting Around","icon":"🚌"},{"es":"¿Me puede indicar cómo llegar?","en":"Can you tell me how to get there?","topic":"Getting Around","icon":"🚌"},{"es":"Prefiero ir en transporte público.","en":"I prefer public transport.","topic":"Getting Around","icon":"🚌"},{"es":"Tengo que hacerme un análisis de sangre.","en":"I have to get a blood test.","topic":"Health & Body","icon":"🏥"},{"es":"El médico me mandó reposo.","en":"The doctor ordered me to rest.","topic":"Health & Body","icon":"🏥"},{"es":"Me encuentro un poco mejor.","en":"I am feeling a bit better.","topic":"Health & Body","icon":"🏥"},{"es":"Hay que llevar una vida sana.","en":"One must lead a healthy life.","topic":"Health & Body","icon":"🏥"},{"es":"Se me estropeó el calentador.","en":"My water heater broke down.","topic":"Home & Housing","icon":"🏠"},{"es":"Necesito hablar con el propietario.","en":"I need to talk to the landlord.","topic":"Home & Housing","icon":"🏠"},{"es":"Vamos a renovar la cocina.","en":"We are going to renovate the kitchen.","topic":"Home & Housing","icon":"🏠"},{"es":"El piso está cerca del centro.","en":"The flat is close to the city centre.","topic":"Home & Housing","icon":"🏠"},{"es":"Firmé un contrato de un año.","en":"I signed a one-year contract.","topic":"Home & Housing","icon":"🏠"},{"es":"Me han convocado a una entrevista.","en":"I've been called for an interview.","topic":"Work & Career","icon":"💼"},{"es":"Trabajo desde casa tres días a la semana.","en":"I work from home three days a week.","topic":"Work & Career","icon":"💼"},{"es":"El sueldo no cubre los gastos.","en":"The salary doesn't cover expenses.","topic":"Work & Career","icon":"💼"},{"es":"Hay buen ambiente de trabajo.","en":"There is a good work environment.","topic":"Work & Career","icon":"💼"},{"es":"Pido un aumento de sueldo.","en":"I'm asking for a raise.","topic":"Work & Career","icon":"💼"},{"es":"Últimamente me siento agotado.","en":"Lately I feel exhausted.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Necesito tiempo para procesar esto.","en":"I need time to process this.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Me resulta difícil expresar lo que siento.","en":"I find it hard to express how I feel.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"¿Cuándo te va bien?","en":"When works for you?","topic":"Making Plans","icon":"📅"},{"es":"Tengo que cancelar los planes.","en":"I have to cancel the plans.","topic":"Making Plans","icon":"📅"},{"es":"¿Qué tal si quedamos el jueves?","en":"How about we meet on Thursday?","topic":"Making Plans","icon":"📅"},{"es":"Me encantaría, pero tengo otro compromiso.","en":"I'd love to, but I have another commitment.","topic":"Making Plans","icon":"📅"},{"es":"Lo dejamos para otra ocasión.","en":"We'll leave it for another occasion.","topic":"Making Plans","icon":"📅"},{"es":"Desde mi punto de vista, es un error.","en":"From my point of view, it's a mistake.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Hay que considerar los pros y los contras.","en":"We need to consider the pros and cons.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Lo que dices tiene mucho sentido.","en":"What you're saying makes a lot of sense.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Entiendo tu postura, pero difiero.","en":"I understand your position, but I disagree.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Es un tema bastante polémico.","en":"It's a quite controversial topic.","topic":"Opinions & Arguments","icon":"💬"},{"es":"¡Qué lío!","en":"What a mess!","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Me tiene harto.","en":"I'm fed up with it.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"¡No me digas!","en":"You don't say!","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Cuesta un ojo de la cara.","en":"It costs an arm and a leg.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Meto la pata constantemente.","en":"I keep putting my foot in it.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Está en las nubes.","en":"He's daydreaming.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Lo pillo.","en":"I get it.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Reviso el correo nada más levantarme.","en":"I check email as soon as I get up.","topic":"Daily Routines","icon":"☀️"},{"es":"Intento dormir ocho horas cada noche.","en":"I try to sleep eight hours every night.","topic":"Daily Routines","icon":"☀️"},{"es":"Sigo la misma rutina todos los días.","en":"I follow the same routine every day.","topic":"Daily Routines","icon":"☀️"},{"es":"Los fines de semana rompo la rutina.","en":"On weekends I break from routine.","topic":"Daily Routines","icon":"☀️"},{"es":"Hemos hecho una reserva para dos noches.","en":"We've made a reservation for two nights.","topic":"Travel & Tourism","icon":"✈️"},{"es":"El vuelo ha sido cancelado.","en":"The flight has been cancelled.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Quería hacer turismo por la costa.","en":"I wanted to sightsee along the coast.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Me perdí en el centro histórico.","en":"I got lost in the historic centre.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Hay que hacer el check-in antes de las doce.","en":"Check-in must be done before noon.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Busca más información en internet.","en":"Search for more information online.","topic":"Technology","icon":"📱"},{"es":"Tengo que hacer una copia de seguridad.","en":"I need to make a backup.","topic":"Technology","icon":"📱"},{"es":"El archivo no se puede abrir.","en":"The file cannot be opened.","topic":"Technology","icon":"📱"},{"es":"Las redes sociales influyen en la opinión pública.","en":"Social media influences public opinion.","topic":"Technology","icon":"📱"},{"es":"Trabajo con herramientas digitales.","en":"I work with digital tools.","topic":"Technology","icon":"📱"},{"es":"La privacidad digital es fundamental.","en":"Digital privacy is fundamental.","topic":"Technology","icon":"📱"},{"es":"Cuando era niño, jugaba mucho.","en":"When I was a child, I played a lot.","topic":"Essential Grammar","icon":"📚"},{"es":"Si tuviera dinero, viajaría.","en":"If I had money, I would travel.","topic":"Essential Grammar","icon":"📚"},{"es":"He terminado el proyecto.","en":"I have finished the project.","topic":"Essential Grammar","icon":"📚"},{"es":"Me dijeron que vendría.","en":"They told me he would come.","topic":"Essential Grammar","icon":"📚"},{"es":"Es necesario que lo hagas.","en":"It is necessary that you do it.","topic":"Essential Grammar","icon":"📚"},{"es":"El fin de semana fui al cine.","en":"I went to the movies at the weekend.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Colecciono sellos desde niño.","en":"I've been collecting stamps since childhood.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Últimamente he leído mucha novela negra.","en":"Lately I've been reading a lot of crime novels.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Aprendí a pintar durante la pandemia.","en":"I learned to paint during the pandemic.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Prefiero los deportes al aire libre.","en":"I prefer outdoor sports.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"¿Sería tan amable de explicarme?","en":"Would you be so kind as to explain?","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Le agradecería una respuesta pronto.","en":"I would appreciate a response soon.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Lamento las molestias ocasionadas.","en":"I am sorry for the inconvenience caused.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Quedo a su disposición.","en":"I am at your disposal.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"En espera de su respuesta.","en":"Awaiting your reply.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Reciba un cordial saludo.","en":"Kind regards.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Por lo tanto, tenemos que actuar.","en":"Therefore, we need to act.","topic":"Connectors & Flow","icon":"🔗"},{"es":"En cambio, él prefiere quedarse.","en":"On the other hand, he prefers to stay.","topic":"Connectors & Flow","icon":"🔗"},{"es":"A pesar de todo, seguimos adelante.","en":"Despite everything, we carry on.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Por otro lado, hay ventajas.","en":"On the other hand, there are advantages.","topic":"Connectors & Flow","icon":"🔗"},{"es":"En conclusión, es una buena idea.","en":"In conclusion, it is a good idea.","topic":"Connectors & Flow","icon":"🔗"},{"es":"De hecho, ya lo sabía.","en":"In fact, I already knew.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Espero que llegues pronto.","en":"I hope you arrive soon.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Quiero que vengas conmigo.","en":"I want you to come with me.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Es importante que estudies.","en":"It is important that you study.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Ojalá haga buen tiempo.","en":"Hopefully the weather will be nice.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"No creo que sea verdad.","en":"I don't think it's true.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Busco a alguien que hable francés.","en":"I'm looking for someone who speaks French.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Llama cuando puedas.","en":"Call when you can.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Dudo que venga hoy.","en":"I doubt he'll come today.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Me alegra que estés bien.","en":"I'm glad you're doing well.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Es necesario que lo hagas ahora.","en":"It is necessary that you do it now.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Es importante votar.","en":"It is important to vote.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Los precios han subido mucho.","en":"Prices have risen a lot.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Hay mucho desempleo.","en":"There is a lot of unemployment.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La sociedad está cambiando.","en":"Society is changing.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Es un problema social grave.","en":"It is a serious social problem.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Hay que respetar los derechos humanos.","en":"Human rights must be respected.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La igualdad de género es fundamental.","en":"Gender equality is fundamental.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"El gobierno ha anunciado nuevas medidas.","en":"The government has announced new measures.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La corrupción daña a la sociedad.","en":"Corruption harms society.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Hay que combatir la discriminación.","en":"Discrimination must be fought.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"El verano aquí es muy húmedo.","en":"Summer here is very humid.","topic":"Weather & Environment","icon":"🌱"},{"es":"Hay tormenta eléctrica.","en":"There is a thunderstorm.","topic":"Weather & Environment","icon":"🌱"},{"es":"Las inundaciones han causado daños.","en":"The floods have caused damage.","topic":"Weather & Environment","icon":"🌱"},{"es":"El cambio climático es un problema global.","en":"Climate change is a global problem.","topic":"Weather & Environment","icon":"🌱"},{"es":"Se esperan fuertes lluvias esta noche.","en":"Heavy rain is expected tonight.","topic":"Weather & Environment","icon":"🌱"},{"es":"La ciencia avanza muy rápido.","en":"Science advances very quickly.","topic":"Science & Innovation","icon":"🔬"},{"es":"Hicieron un descubrimiento importante.","en":"They made an important discovery.","topic":"Science & Innovation","icon":"🔬"},{"es":"El experimento tuvo éxito.","en":"The experiment was successful.","topic":"Science & Innovation","icon":"🔬"},{"es":"La tecnología mejora nuestra vida.","en":"Technology improves our lives.","topic":"Science & Innovation","icon":"🔬"},{"es":"Hay que invertir más en investigación.","en":"We need to invest more in research.","topic":"Science & Innovation","icon":"🔬"},{"es":"La energía solar es renovable.","en":"Solar energy is renewable.","topic":"Science & Innovation","icon":"🔬"},{"es":"Los robots ya realizan tareas complejas.","en":"Robots already perform complex tasks.","topic":"Science & Innovation","icon":"🔬"},{"es":"La nanotecnología tiene muchas aplicaciones.","en":"Nanotechnology has many applications.","topic":"Science & Innovation","icon":"🔬"},{"es":"El genoma humano fue descifrado en 2003.","en":"The human genome was decoded in 2003.","topic":"Science & Innovation","icon":"🔬"},{"es":"Los satélites transmiten datos en tiempo real.","en":"Satellites transmit data in real time.","topic":"Science & Innovation","icon":"🔬"},{"es":"Lo importante no es el destino sino el camino.","en":"What matters is not the destination but the journey.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La libertad conlleva responsabilidad.","en":"Freedom comes with responsibility.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Reflexionar sobre los propios errores nos hace crecer.","en":"Reflecting on our mistakes helps us grow.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"El conocimiento es poder.","en":"Knowledge is power.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Hay que vivir el presente.","en":"One must live in the present.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Aprendí mucho en ese curso.","en":"I learned a lot in that course.","topic":"Education & Learning","icon":"🎓"},{"es":"Estoy haciendo un máster.","en":"I am doing a master's degree.","topic":"Education & Learning","icon":"🎓"},{"es":"Necesito mejorar mi pronunciación.","en":"I need to improve my pronunciation.","topic":"Education & Learning","icon":"🎓"},{"es":"La educación es la base del desarrollo.","en":"Education is the foundation of development.","topic":"Education & Learning","icon":"🎓"},{"es":"Me inscribí en un curso de idiomas.","en":"I enrolled in a language course.","topic":"Education & Learning","icon":"🎓"},{"es":"Necesito una rutina de entrenamiento.","en":"I need a training routine.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El deporte mejora la salud mental.","en":"Sport improves mental health.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Participé en una carrera popular.","en":"I took part in a fun run.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El árbitro tomó una decisión polémica.","en":"The referee made a controversial decision.","topic":"Sports & Exercise","icon":"⚽"},{"es":"La selección nacional llegó a la final.","en":"The national team reached the final.","topic":"Sports & Exercise","icon":"⚽"},{"es":"He leído esa novela dos veces.","en":"I have read that novel twice.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"El director ganó un premio internacional.","en":"The director won an international award.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"La película ha sido muy bien recibida.","en":"The film has been very well received.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Me parece un reportaje muy interesante.","en":"I think it's a very interesting documentary.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"La música flamenca es patrimonio cultural.","en":"Flamenco music is cultural heritage.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Las series españolas han ganado popularidad.","en":"Spanish series have gained popularity.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Me han robado el bolso.","en":"My bag was stolen.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Necesito hablar con un responsable.","en":"I need to speak with a manager.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"No sé cómo resolver esto.","en":"I don't know how to solve this.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"¿Podría explicármelo de otra manera?","en":"Could you explain it to me another way?","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Hay un malentendido.","en":"There is a misunderstanding.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Tome la autopista dirección norte.","en":"Take the motorway heading north.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Está justo antes del túnel.","en":"It's just before the tunnel.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Encontrará el edificio a mano izquierda.","en":"You'll find the building on your left.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Salga por la puerta principal.","en":"Exit through the main door.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Está en el cruce con la calle Mayor.","en":"It's at the junction with the main street.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Me acuerdo de ti.","en":"I remember you.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Depende de lo que digas.","en":"It depends on what you say.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Consigo lo que me propongo.","en":"I achieve what I set out to do.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Suelo desayunar tarde.","en":"I usually have breakfast late.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Me niego a hacerlo.","en":"I refuse to do it.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Haremos una videoconferencia mañana.","en":"We will have a video conference tomorrow.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Le adjunto el informe.","en":"I am attaching the report.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"¿Podemos posponer la reunión?","en":"Can we postpone the meeting?","topic":"Business & Formal Settings","icon":"🏢"},{"es":"La empresa ha logrado sus objetivos.","en":"The company has achieved its goals.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Presentaremos los resultados el viernes.","en":"We will present the results on Friday.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"El presupuesto ha sido aprobado.","en":"The budget has been approved.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"El precio del petróleo ha bajado.","en":"The price of oil has fallen.","topic":"Economy & Finance","icon":"💰"},{"es":"El paro ha aumentado este año.","en":"Unemployment has increased this year.","topic":"Economy & Finance","icon":"💰"},{"es":"La economía crece un dos por ciento.","en":"The economy grows by two percent.","topic":"Economy & Finance","icon":"💰"},{"es":"Quiero abrir una cuenta bancaria.","en":"I want to open a bank account.","topic":"Economy & Finance","icon":"💰"},{"es":"Necesito pedir un préstamo.","en":"I need to apply for a loan.","topic":"Economy & Finance","icon":"💰"},{"es":"Las tasas de interés son bajas.","en":"Interest rates are low.","topic":"Economy & Finance","icon":"💰"},{"es":"La bolsa cayó ayer con fuerza.","en":"The stock market fell sharply yesterday.","topic":"Economy & Finance","icon":"💰"},{"es":"Estamos en recesión económica.","en":"We are in an economic recession.","topic":"Economy & Finance","icon":"💰"},{"es":"Los mercados están muy volátiles.","en":"Markets are very volatile.","topic":"Economy & Finance","icon":"💰"},{"es":"Hay que diversificar las inversiones.","en":"It is necessary to diversify investments.","topic":"Economy & Finance","icon":"💰"},{"es":"Las elecciones son el próximo mes.","en":"The elections are next month.","topic":"Politics & Government","icon":"🏛️"},{"es":"El parlamento aprobó la ley.","en":"Parliament passed the law.","topic":"Politics & Government","icon":"🏛️"},{"es":"El presidente dio un discurso.","en":"The president gave a speech.","topic":"Politics & Government","icon":"🏛️"},{"es":"Hay una manifestación en el centro.","en":"There is a demonstration downtown.","topic":"Politics & Government","icon":"🏛️"},{"es":"El partido está en la oposición.","en":"The party is in opposition.","topic":"Politics & Government","icon":"🏛️"},{"es":"Se han convocado elecciones anticipadas.","en":"Early elections have been called.","topic":"Politics & Government","icon":"🏛️"},{"es":"El gobierno quiere subir los impuestos.","en":"The government wants to raise taxes.","topic":"Politics & Government","icon":"🏛️"},{"es":"La ciudadanía exige más transparencia.","en":"Citizens demand more transparency.","topic":"Politics & Government","icon":"🏛️"},{"es":"La separación de poderes es esencial.","en":"Separation of powers is essential.","topic":"Politics & Government","icon":"🏛️"},{"es":"El alcalde presentó su plan para la ciudad.","en":"The mayor presented his plan for the city.","topic":"Politics & Government","icon":"🏛️"},{"es":"La Alhambra es un monumento histórico en Granada.","en":"The Alhambra is a historic monument in Granada.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El lunfardo es un argot de Buenos Aires.","en":"Lunfardo is a slang from Buenos Aires.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"Hay diferencias de vocabulario entre países.","en":"There are vocabulary differences between countries.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El español de América tiene acento distinto.","en":"Latin American Spanish has a different accent.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"La siesta sigue siendo parte de la cultura.","en":"The siesta remains part of the culture.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"La gastronomía varía mucho por región.","en":"Gastronomy varies greatly by region.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El Camino de Santiago atrae a peregrinos.","en":"The Camino de Santiago attracts pilgrims.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"La moda cambia cada temporada.","en":"Fashion changes every season.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Prefiero la ropa cómoda a la elegante.","en":"I prefer comfortable clothes over elegant ones.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Esa marca es cara pero de buena calidad.","en":"That brand is expensive but good quality.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Se viste de manera muy original.","en":"She dresses in a very original way.","topic":"Clothes & Fashion","icon":"👗"},{"es":"La moda sostenible está ganando terreno.","en":"Sustainable fashion is gaining ground.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Hay muchas especies en peligro de extinción.","en":"There are many endangered species.","topic":"Animals & Nature","icon":"🐾"},{"es":"Los incendios forestales destruyen el ecosistema.","en":"Forest fires destroy the ecosystem.","topic":"Animals & Nature","icon":"🐾"},{"es":"La biodiversidad es fundamental para la vida.","en":"Biodiversity is fundamental for life.","topic":"Animals & Nature","icon":"🐾"},{"es":"Los animales marinos están amenazados.","en":"Marine animals are threatened.","topic":"Animals & Nature","icon":"🐾"},{"es":"Hay que proteger los espacios naturales.","en":"Natural spaces must be protected.","topic":"Animals & Nature","icon":"🐾"},{"es":"¿Me puede cambiar este plato?","en":"Can you change this dish for me?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"El postre estaba riquísimo.","en":"The dessert was absolutely delicious.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"¿Hay algún plato vegetariano?","en":"Is there a vegetarian dish?","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Preferiría algo sin mariscos.","en":"I'd prefer something without shellfish.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"La espera ha sido demasiado larga.","en":"The wait has been too long.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Es una persona muy comprometida.","en":"He is a very committed person.","topic":"Describing People & Things","icon":"📝"},{"es":"Se nota que es muy inteligente.","en":"You can tell he is very intelligent.","topic":"Describing People & Things","icon":"📝"},{"es":"Le caracteriza su honestidad.","en":"Honesty is what defines her.","topic":"Describing People & Things","icon":"📝"},{"es":"Es alguien en quien puedes confiar.","en":"She is someone you can trust.","topic":"Describing People & Things","icon":"📝"},{"es":"Tiene un carácter muy fuerte.","en":"He has a very strong character.","topic":"Describing People & Things","icon":"📝"},{"es":"¿Cuáles son tus planes para las vacaciones?","en":"What are your holiday plans?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué opinas sobre el trabajo remoto?","en":"What do you think about remote work?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Cómo conociste a tu pareja?","en":"How did you meet your partner?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué es lo que más te gusta de tu trabajo?","en":"What do you like most about your job?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué libro estás leyendo ahora?","en":"What book are you reading now?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué te parece vivir aquí?","en":"What do you think about living here?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Cuál fue tu mejor viaje hasta ahora?","en":"What was your best trip so far?","topic":"Conversation Starters","icon":"💡"},{"es":"Espero que podamos repetirlo.","en":"I hope we can do this again.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido un honor conocerte.","en":"It has been an honour to meet you.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Espero que tengamos noticias tuyas pronto.","en":"I hope to hear from you soon.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido una reunión muy productiva.","en":"It has been a very productive meeting.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Te deseo todo lo mejor en tu nueva etapa.","en":"I wish you all the best in your new chapter.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Mi mayor dificultad es el subjuntivo.","en":"My biggest difficulty is the subjunctive.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Intento pensar directamente en español.","en":"I try to think directly in Spanish.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Escucho podcasts para mejorar la comprensión.","en":"I listen to podcasts to improve comprehension.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Tengo un intercambio de idiomas.","en":"I have a language exchange.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"La gramática es complicada pero fascinante.","en":"Grammar is complicated but fascinating.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Cuando era joven vivia en el campo.","en":"When I was young I lived in the countryside.","topic":"Past Tense","icon":"⏪"},{"es":"Antes ibamos de vacaciones cada anno.","en":"We used to go on holiday every year.","topic":"Past Tense","icon":"⏪"},{"es":"He terminado el informe.","en":"I have finished the report.","topic":"Past Tense","icon":"⏪"},{"es":"Ya habia comido cuando llegaste.","en":"I had already eaten when you arrived.","topic":"Past Tense","icon":"⏪"},{"es":"Estaba lloviendo cuando sali.","en":"It was raining when I left.","topic":"Past Tense","icon":"⏪"},{"es":"Habra muchos cambios este anno.","en":"There will be many changes this year.","topic":"Future and Conditional","icon":"⏩"},{"es":"Vendras a la fiesta?","en":"Will you come to the party?","topic":"Future and Conditional","icon":"⏩"},{"es":"Si tuviera tiempo aprenderia a pintar.","en":"If I had time I would learn to paint.","topic":"Future and Conditional","icon":"⏩"},{"es":"Podria venir manana si quieres.","en":"I could come tomorrow if you want.","topic":"Future and Conditional","icon":"⏩"},{"es":"Supongo que ya lo sabra.","en":"I suppose he already knows.","topic":"Future and Conditional","icon":"⏩"},{"es":"Lo hare tan pronto como pueda.","en":"I will do it as soon as I can.","topic":"Future and Conditional","icon":"⏩"},{"es":"El trabajo en grupo nos ayuda a aprender.","en":"Group work helps us learn.","topic":"School and Academic Life","icon":"🏫"},{"es":"Presento mi proyecto el proximo martes.","en":"I present my project next Tuesday.","topic":"School and Academic Life","icon":"🏫"},{"es":"Tengo que citar las fuentes correctamente.","en":"I need to cite my sources correctly.","topic":"School and Academic Life","icon":"🏫"},{"es":"La universidad ofrece muchas actividades.","en":"The university offers many activities.","topic":"School and Academic Life","icon":"🏫"},{"es":"Me especializo en linguistica.","en":"I specialise in linguistics.","topic":"School and Academic Life","icon":"🏫"},{"es":"Tiene mas ventajas que desventajas.","en":"It has more advantages than disadvantages.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Es tan bueno como el otro.","en":"It is as good as the other one.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"El nuevo modelo es mucho mas eficiente.","en":"The new model is much more efficient.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Ambas opciones tienen sus meritos.","en":"Both options have their merits.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"A diferencia del anterior este es mas ligero.","en":"Unlike the previous one this one is lighter.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Cuales son tus planes para las vacaciones?","en":"What are your holiday plans?","topic":"Conversation Starters","icon":"💡"},{"es":"Que opinas sobre el trabajo remoto?","en":"What do you think about remote work?","topic":"Conversation Starters","icon":"💡"},{"es":"Como conociste a tu pareja?","en":"How did you meet your partner?","topic":"Conversation Starters","icon":"💡"},{"es":"Que libro estas leyendo ahora?","en":"What book are you reading now?","topic":"Conversation Starters","icon":"💡"},{"es":"Que te parece vivir aqui?","en":"What do you think about living here?","topic":"Conversation Starters","icon":"💡"},{"es":"Cual fue tu mejor viaje hasta ahora?","en":"What was your best trip so far?","topic":"Conversation Starters","icon":"💡"},{"es":"Que es lo que mas te gusta de tu trabajo?","en":"What do you like most about your job?","topic":"Conversation Starters","icon":"💡"},{"es":"Espero que podamos repetirlo.","en":"I hope we can do this again.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido un honor conocerte.","en":"It has been an honour to meet you.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Espero que tengamos noticias tuyas pronto.","en":"I hope to hear from you soon.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido una reunion muy productiva.","en":"It has been a very productive meeting.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Te deseo todo lo mejor en tu nueva etapa.","en":"I wish you all the best in your new chapter.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Mi mayor dificultad es el subjuntivo.","en":"My biggest difficulty is the subjunctive.","topic":"Language Learning","icon":"🌐"},{"es":"Intento pensar directamente en espanol.","en":"I try to think directly in Spanish.","topic":"Language Learning","icon":"🌐"},{"es":"Escucho podcasts para mejorar la comprension.","en":"I listen to podcasts to improve comprehension.","topic":"Language Learning","icon":"🌐"},{"es":"Tengo un intercambio de idiomas.","en":"I have a language exchange.","topic":"Language Learning","icon":"🌐"},{"es":"La gramatica es complicada pero fascinante.","en":"Grammar is complicated but fascinating.","topic":"Language Learning","icon":"🌐"}]},{"id":"w4","name":"Wave 4 — Near Fluency","sub":"B2 · Days 91–100 · Think and speak like a native","color":"#6b1a1a","bg":"#fce8e8","d":4,"badge":"B2","sentences":[{"es":"Mis pasiones son la lectura y el senderismo.","en":"My passions are reading and hiking.","topic":"Introductions","icon":"🙋"},{"es":"He vivido en tres países diferentes.","en":"I have lived in three different countries.","topic":"Introductions","icon":"🙋"},{"es":"Tengo una perspectiva internacional del mundo.","en":"I have an international worldview.","topic":"Introductions","icon":"🙋"},{"es":"Mi identidad está muy ligada a mi cultura.","en":"My identity is closely tied to my culture.","topic":"Introductions","icon":"🙋"},{"es":"Habrá una reunión a mediados de mes.","en":"There will be a meeting mid-month.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"El contrato vence a finales de año.","en":"The contract expires at year end.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"Llevamos dos horas esperando.","en":"We have been waiting for two hours.","topic":"Numbers, Time & Dates","icon":"🕐"},{"es":"A pesar de la distancia, mantenemos contacto.","en":"Despite the distance, we stay in touch.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Hay cierta tensión entre ellos.","en":"There is some tension between them.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"La crianza de los hijos es un desafío.","en":"Raising children is a challenge.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"Ella heredó el carácter de su madre.","en":"She inherited her mother's character.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"La familia es el pilar de la sociedad.","en":"Family is the pillar of society.","topic":"Family & Relationships","icon":"👨‍👩‍👧"},{"es":"La cocina mediterránea es muy variada.","en":"Mediterranean cuisine is very varied.","topic":"Food & Eating","icon":"🍽️"},{"es":"La gastronomía local refleja la cultura.","en":"Local gastronomy reflects the culture.","topic":"Food & Eating","icon":"🍽️"},{"es":"El chef fusiona sabores de distintas tradiciones.","en":"The chef fuses flavors from different traditions.","topic":"Food & Eating","icon":"🍽️"},{"es":"El maridaje de vino y comida es todo un arte.","en":"Food and wine pairing is a true art.","topic":"Food & Eating","icon":"🍽️"},{"es":"El presupuesto está un poco ajustado.","en":"The budget is a bit tight.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Hicieron una rebaja considerable.","en":"They made a considerable price cut.","topic":"Shopping & Money","icon":"🛍️"},{"es":"Comparé varios precios antes de comprar.","en":"I compared several prices before buying.","topic":"Shopping & Money","icon":"🛍️"},{"es":"La inflación ha afectado el costo de vida.","en":"Inflation has affected the cost of living.","topic":"Shopping & Money","icon":"🛍️"},{"es":"El tráfico estaba terrible esta mañana.","en":"Traffic was terrible this morning.","topic":"Getting Around","icon":"🚌"},{"es":"Se ha anunciado una huelga de metro.","en":"A subway strike has been announced.","topic":"Getting Around","icon":"🚌"},{"es":"Las obras causan embotellamientos.","en":"Roadworks are causing traffic jams.","topic":"Getting Around","icon":"🚌"},{"es":"El transporte sostenible reduce la contaminación.","en":"Sustainable transport reduces pollution.","topic":"Getting Around","icon":"🚌"},{"es":"El estrés puede afectar la salud mental.","en":"Stress can affect mental health.","topic":"Health & Body","icon":"🏥"},{"es":"Le han diagnosticado diabetes.","en":"She has been diagnosed with diabetes.","topic":"Health & Body","icon":"🏥"},{"es":"La prevención es mejor que la cura.","en":"Prevention is better than cure.","topic":"Health & Body","icon":"🏥"},{"es":"El sistema sanitario está bajo presión.","en":"The healthcare system is under pressure.","topic":"Health & Body","icon":"🏥"},{"es":"El precio de la vivienda ha subido mucho.","en":"Housing prices have risen a lot.","topic":"Home & Housing","icon":"🏠"},{"es":"Estamos considerando comprar una casa.","en":"We are considering buying a house.","topic":"Home & Housing","icon":"🏠"},{"es":"El edificio no cumple las normas de seguridad.","en":"The building doesn't meet safety standards.","topic":"Home & Housing","icon":"🏠"},{"es":"El mercado inmobiliario está muy activo.","en":"The real estate market is very active.","topic":"Home & Housing","icon":"🏠"},{"es":"Prefiero vivir en las afueras por la tranquilidad.","en":"I prefer the suburbs for peace and quiet.","topic":"Home & Housing","icon":"🏠"},{"es":"Estoy pensando en cambiar de sector.","en":"I'm thinking about changing sectors.","topic":"Work & Career","icon":"💼"},{"es":"La empresa ofrece formación continua.","en":"The company offers ongoing training.","topic":"Work & Career","icon":"💼"},{"es":"Hay que adaptarse a los cambios del mercado.","en":"One must adapt to market changes.","topic":"Work & Career","icon":"💼"},{"es":"La conciliación laboral y familiar es clave.","en":"Work-life balance is key.","topic":"Work & Career","icon":"💼"},{"es":"Negocié las condiciones del contrato.","en":"I negotiated the terms of the contract.","topic":"Work & Career","icon":"💼"},{"es":"Siento una mezcla de emociones.","en":"I feel a mix of emotions.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Me afecta más de lo que esperaba.","en":"It affects me more than I expected.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Es normal tener altibajos emocionales.","en":"It is normal to have emotional ups and downs.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"La frustración puede llevar al agotamiento.","en":"Frustration can lead to burnout.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"Es importante gestionar las emociones.","en":"It is important to manage emotions.","topic":"Emotions & Feelings","icon":"❤️"},{"es":"¿Confirmas si puedes venir?","en":"Can you confirm if you can come?","topic":"Making Plans","icon":"📅"},{"es":"Tengo la agenda bastante llena esta semana.","en":"My schedule is quite full this week.","topic":"Making Plans","icon":"📅"},{"es":"Podríamos combinar ambas actividades.","en":"We could combine both activities.","topic":"Making Plans","icon":"📅"},{"es":"Lo ideal sería que vinierais todos.","en":"Ideally, you would all come.","topic":"Making Plans","icon":"📅"},{"es":"Nos reservaremos una mesa con antelación.","en":"We'll reserve a table in advance.","topic":"Making Plans","icon":"📅"},{"es":"¿Tienes disponibilidad el próximo martes?","en":"Are you available next Tuesday?","topic":"Making Plans","icon":"📅"},{"es":"Propongo que nos reunamos por videollamada.","en":"I suggest we meet by video call.","topic":"Making Plans","icon":"📅"},{"es":"Los argumentos a favor superan a los en contra.","en":"The arguments in favour outweigh those against.","topic":"Opinions & Arguments","icon":"💬"},{"es":"No se puede generalizar tan fácilmente.","en":"One cannot generalize so easily.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Es una cuestión de perspectiva.","en":"It's a matter of perspective.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Habría que matizar esa afirmación.","en":"That statement would need to be qualified.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Habría que analizar el tema con más calma.","en":"We should analyse the topic more calmly.","topic":"Opinions & Arguments","icon":"💬"},{"es":"Dar en el clavo.","en":"To hit the nail on the head.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"No hay mal que por bien no venga.","en":"Every cloud has a silver lining.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"A lo hecho, pecho.","en":"What's done is done.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Más vale tarde que nunca.","en":"Better late than never.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"No todo lo que brilla es oro.","en":"All that glitters is not gold.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Camarón que se duerme, se lo lleva la corriente.","en":"You snooze, you lose.","topic":"Idioms & Natural Speech","icon":"🗣️"},{"es":"Tener una rutina sana mejora la productividad.","en":"Having a healthy routine improves productivity.","topic":"Daily Routines","icon":"☀️"},{"es":"La meditación matutina me ayuda a centrarme.","en":"Morning meditation helps me focus.","topic":"Daily Routines","icon":"☀️"},{"es":"Me ha costado adaptar mi horario al nuevo trabajo.","en":"I've struggled to adapt my schedule to the new job.","topic":"Daily Routines","icon":"☀️"},{"es":"El turismo de masas afecta a las ciudades.","en":"Mass tourism affects cities.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Prefiero el turismo rural al de playa.","en":"I prefer rural tourism to beach tourism.","topic":"Travel & Tourism","icon":"✈️"},{"es":"Viajar amplía la perspectiva cultural.","en":"Travelling broadens cultural perspective.","topic":"Travel & Tourism","icon":"✈️"},{"es":"La guía turística estaba muy bien documentada.","en":"The travel guide was very well documented.","topic":"Travel & Tourism","icon":"✈️"},{"es":"La sostenibilidad es clave en el turismo moderno.","en":"Sustainability is key in modern tourism.","topic":"Travel & Tourism","icon":"✈️"},{"es":"La inteligencia artificial avanza rápidamente.","en":"Artificial intelligence is advancing rapidly.","topic":"Technology","icon":"📱"},{"es":"Los datos personales deben protegerse.","en":"Personal data must be protected.","topic":"Technology","icon":"📱"},{"es":"Las ciberamenazas son cada vez más comunes.","en":"Cyber threats are becoming more common.","topic":"Technology","icon":"📱"},{"es":"El trabajo remoto depende de una buena conexión.","en":"Remote work depends on a good connection.","topic":"Technology","icon":"📱"},{"es":"La digitalización ha transformado la economía.","en":"Digitalization has transformed the economy.","topic":"Technology","icon":"📱"},{"es":"Si hubiera sabido, lo habría hecho.","en":"If I had known, I would have done it.","topic":"Essential Grammar","icon":"📚"},{"es":"No creo que sea verdad.","en":"I don't think it's true.","topic":"Essential Grammar","icon":"📚"},{"es":"Para cuando llegues, habré terminado.","en":"By the time you arrive, I will have finished.","topic":"Essential Grammar","icon":"📚"},{"es":"Ojalá pudiera acompañarte.","en":"I wish I could go with you.","topic":"Essential Grammar","icon":"📚"},{"es":"Lo haré tan pronto como pueda.","en":"I will do it as soon as I can.","topic":"Essential Grammar","icon":"📚"},{"es":"El voluntariado me parece muy enriquecedor.","en":"I find volunteering very enriching.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Tengo pensado apuntarme a clases de baile.","en":"I'm planning to sign up for dance classes.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Los videojuegos son una forma de arte.","en":"Video games are a form of art.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Me dedico al teatro amateur.","en":"I do amateur theatre.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Las actividades culturales enriquecen la vida.","en":"Cultural activities enrich life.","topic":"Hobbies & Free Time","icon":"🎸"},{"es":"Me gustaría concertar una cita.","en":"I would like to schedule an appointment.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Le ruego que considere mi solicitud.","en":"I kindly ask you to consider my request.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Sería conveniente acordar una reunión.","en":"It would be convenient to arrange a meeting.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Le confirmo mi asistencia con mucho gusto.","en":"I happily confirm my attendance.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Espero que podamos llegar a un acuerdo.","en":"I hope we can reach an agreement.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Atentamente, le informo que...","en":"I formally inform you that...","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Según lo acordado en la reunión anterior...","en":"As agreed in the previous meeting...","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Quedo en espera de sus noticias.","en":"I look forward to hearing from you.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"Hago extensiva mi gratitud a todo el equipo.","en":"I extend my gratitude to the entire team.","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"En virtud de lo expuesto...","en":"In light of the above...","topic":"Polite Requests & Formal","icon":"🤝"},{"es":"No obstante, cabe considerar...","en":"Nevertheless, it is worth considering...","topic":"Connectors & Flow","icon":"🔗"},{"es":"En definitiva, la situación es compleja.","en":"Ultimately, the situation is complex.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Siempre y cuando se cumplan las condiciones.","en":"As long as the conditions are met.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Tal como se indicó anteriormente.","en":"As previously indicated.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Habida cuenta de los datos disponibles.","en":"Given the available data.","topic":"Connectors & Flow","icon":"🔗"},{"es":"Aunque llueva, saldré.","en":"Even if it rains, I'll go out.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Para que lo entiendas, te lo explico.","en":"So that you understand, I'll explain it.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Siempre que puedas, avísame.","en":"Whenever you can, let me know.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"No hay nadie que sepa la respuesta.","en":"Nobody knows the answer.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"En cuanto llegue, te escribo.","en":"As soon as I arrive, I'll write to you.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Me iré antes de que empiece el problema.","en":"I'll leave before the problem starts.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Quizás sea mejor esperar.","en":"Perhaps it's better to wait.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Tal vez tengas razón.","en":"Maybe you're right.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"No es posible que hayan llegado ya.","en":"It's not possible they've already arrived.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Te digo esto para que no te sorprenda.","en":"I'm telling you this so you're not surprised.","topic":"Subjunctive & Advanced","icon":"🎓"},{"es":"Las políticas sociales tienen un impacto directo.","en":"Social policies have a direct impact.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La brecha entre ricos y pobres es preocupante.","en":"The gap between rich and poor is concerning.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La migración es un fenómeno complejo.","en":"Migration is a complex phenomenon.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"El movimiento feminista ha ganado visibilidad.","en":"The feminist movement has gained visibility.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La democracia depende de ciudadanos informados.","en":"Democracy depends on informed citizens.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"El acceso a la sanidad es un derecho básico.","en":"Access to healthcare is a basic right.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La pobreza energética afecta a muchas familias.","en":"Energy poverty affects many families.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Se debate sobre la reforma del sistema judicial.","en":"The reform of the judicial system is being debated.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La integración de inmigrantes es un reto social.","en":"The integration of immigrants is a social challenge.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"Hay que proteger la diversidad cultural.","en":"Cultural diversity must be protected.","topic":"Society & Current Affairs","icon":"🌍"},{"es":"La sequía afecta a la agricultura.","en":"The drought is affecting agriculture.","topic":"Weather & Environment","icon":"🌱"},{"es":"Las emisiones de CO2 aumentan el calentamiento.","en":"CO2 emissions increase warming.","topic":"Weather & Environment","icon":"🌱"},{"es":"Hay que reducir la huella de carbono.","en":"We must reduce our carbon footprint.","topic":"Weather & Environment","icon":"🌱"},{"es":"Los fenómenos meteorológicos son más extremos.","en":"Weather phenomena are becoming more extreme.","topic":"Weather & Environment","icon":"🌱"},{"es":"La deforestación agrava el cambio climático.","en":"Deforestation worsens climate change.","topic":"Weather & Environment","icon":"🌱"},{"es":"La inteligencia artificial plantea dilemas éticos.","en":"Artificial intelligence raises ethical dilemmas.","topic":"Science & Innovation","icon":"🔬"},{"es":"La fusión nuclear podría ser la energía del futuro.","en":"Nuclear fusion could be the energy of the future.","topic":"Science & Innovation","icon":"🔬"},{"es":"La edición genética abre posibilidades médicas.","en":"Genetic editing opens medical possibilities.","topic":"Science & Innovation","icon":"🔬"},{"es":"Las empresas tecnológicas dominan la economía.","en":"Tech companies dominate the economy.","topic":"Science & Innovation","icon":"🔬"},{"es":"La automatización amenaza ciertos empleos.","en":"Automation threatens certain jobs.","topic":"Science & Innovation","icon":"🔬"},{"es":"La carrera espacial ha vuelto a activarse.","en":"The space race has reactivated.","topic":"Science & Innovation","icon":"🔬"},{"es":"Los avances en medicina prolongan la vida.","en":"Medical advances prolong life.","topic":"Science & Innovation","icon":"🔬"},{"es":"El cambio tecnológico exige formación continua.","en":"Technological change demands ongoing training.","topic":"Science & Innovation","icon":"🔬"},{"es":"Los datos masivos transforman la toma de decisiones.","en":"Big data transforms decision-making.","topic":"Science & Innovation","icon":"🔬"},{"es":"La privacidad en la era digital es un reto.","en":"Privacy in the digital age is a challenge.","topic":"Science & Innovation","icon":"🔬"},{"es":"La empatía nos hace más humanos.","en":"Empathy makes us more human.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La identidad se construye a lo largo de la vida.","en":"Identity is built over the course of a lifetime.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"Cuestionarse las propias creencias es señal de madurez.","en":"Questioning your own beliefs is a sign of maturity.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La ética guía nuestras decisiones.","en":"Ethics guides our decisions.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La búsqueda del sentido es universal.","en":"The search for meaning is universal.","topic":"Reflective & Philosophical","icon":"🧠"},{"es":"La metodología de enseñanza ha cambiado.","en":"Teaching methodology has changed.","topic":"Education & Learning","icon":"🎓"},{"es":"Los estudiantes aprenden mejor con práctica.","en":"Students learn better through practice.","topic":"Education & Learning","icon":"🎓"},{"es":"La educación a distancia tiene sus ventajas.","en":"Distance learning has its advantages.","topic":"Education & Learning","icon":"🎓"},{"es":"El sistema educativo necesita reformas.","en":"The education system needs reforms.","topic":"Education & Learning","icon":"🎓"},{"es":"Obtuvo una beca para estudiar en el extranjero.","en":"She received a scholarship to study abroad.","topic":"Education & Learning","icon":"🎓"},{"es":"El dopaje es un problema en el deporte élite.","en":"Doping is a problem in elite sport.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Los Juegos Olímpicos son un símbolo de unión.","en":"The Olympic Games are a symbol of unity.","topic":"Sports & Exercise","icon":"⚽"},{"es":"Hay una fuerte presión sobre los deportistas.","en":"There is strong pressure on athletes.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El deporte femenino gana cada vez más visibilidad.","en":"Women's sport is gaining more visibility.","topic":"Sports & Exercise","icon":"⚽"},{"es":"El patrocinio es clave para financiar los clubes.","en":"Sponsorship is key to financing clubs.","topic":"Sports & Exercise","icon":"⚽"},{"es":"La literatura latinoamericana es muy rica.","en":"Latin American literature is very rich.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"El realismo mágico es un estilo literario único.","en":"Magic realism is a unique literary style.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"El periodismo de investigación es fundamental.","en":"Investigative journalism is fundamental.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Los medios de comunicación moldean la opinión.","en":"The media shapes public opinion.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"La diversidad cultural enriquece a la sociedad.","en":"Cultural diversity enriches society.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"El arte contemporáneo genera controversia.","en":"Contemporary art generates controversy.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"La censura limita la libertad de expresión.","en":"Censorship limits freedom of expression.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"La creatividad es esencial en cualquier disciplina.","en":"Creativity is essential in any discipline.","topic":"Culture, Arts & Media","icon":"🎨"},{"es":"Presenté una queja formal.","en":"I filed a formal complaint.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Quiero que me devuelvan el dinero.","en":"I want a refund.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Este problema lleva tiempo sin resolverse.","en":"This problem has been unresolved for a long time.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Agradecería que se tomaran medidas.","en":"I would appreciate if measures were taken.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Sería conveniente buscar una solución urgente.","en":"It would be advisable to find an urgent solution.","topic":"Problems & Asking for Help","icon":"🆘"},{"es":"Rodee el edificio por la parte trasera.","en":"Go around the building from the back.","topic":"Directions & Locations","icon":"🗺️"},{"es":"La señalización está un poco confusa.","en":"The signage is a bit confusing.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Aparque en el aparcamiento subterráneo.","en":"Park in the underground car park.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Atraviese el paso de cebra y gire.","en":"Cross the zebra crossing and turn.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Puede orientarse por los puntos cardinales.","en":"You can navigate by the cardinal points.","topic":"Directions & Locations","icon":"🗺️"},{"es":"Tengo en cuenta tus sugerencias.","en":"I take your suggestions into account.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Me hago cargo de la situación.","en":"I take charge of the situation.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Llevo a cabo el plan.","en":"I carry out the plan.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Dar por sentado algo es un error.","en":"Taking something for granted is a mistake.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Pongo en duda sus argumentos.","en":"I question his arguments.","topic":"Common Verbs in Context","icon":"⚡"},{"es":"Necesito revisar el contrato antes de firmarlo.","en":"I need to review the contract before signing it.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Hemos superado las expectativas del cliente.","en":"We have exceeded the client's expectations.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Es necesario optimizar los procesos internos.","en":"It is necessary to optimise internal processes.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"La estrategia de marketing ha dado frutos.","en":"The marketing strategy has paid off.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Proponemos una colaboración a largo plazo.","en":"We propose a long-term collaboration.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"El equipo ha trabajado de manera muy eficiente.","en":"The team has worked very efficiently.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Conviene revisar los indicadores de rendimiento.","en":"It is advisable to review performance indicators.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"Hemos identificado áreas de mejora.","en":"We have identified areas for improvement.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"El acuerdo entra en vigor el próximo mes.","en":"The agreement comes into effect next month.","topic":"Business & Formal Settings","icon":"🏢"},{"es":"La inflación erosiona el poder adquisitivo.","en":"Inflation erodes purchasing power.","topic":"Economy & Finance","icon":"💰"},{"es":"El déficit público ha superado las previsiones.","en":"The public deficit has exceeded forecasts.","topic":"Economy & Finance","icon":"💰"},{"es":"La política fiscal afecta al crecimiento.","en":"Fiscal policy affects growth.","topic":"Economy & Finance","icon":"💰"},{"es":"Los mercados emergentes ofrecen nuevas oportunidades.","en":"Emerging markets offer new opportunities.","topic":"Economy & Finance","icon":"💰"},{"es":"La deuda externa es un lastre para el país.","en":"External debt is a burden for the country.","topic":"Economy & Finance","icon":"💰"},{"es":"Las exportaciones han aumentado un diez por ciento.","en":"Exports have increased by ten percent.","topic":"Economy & Finance","icon":"💰"},{"es":"La regulación financiera es cada vez más estricta.","en":"Financial regulation is becoming stricter.","topic":"Economy & Finance","icon":"💰"},{"es":"Hay que fomentar el espíritu emprendedor.","en":"The entrepreneurial spirit must be encouraged.","topic":"Economy & Finance","icon":"💰"},{"es":"La economía circular reduce el desperdicio.","en":"The circular economy reduces waste.","topic":"Economy & Finance","icon":"💰"},{"es":"El banco central subió los tipos de interés.","en":"The central bank raised interest rates.","topic":"Economy & Finance","icon":"💰"},{"es":"Los partidos negocian un acuerdo de gobierno.","en":"Parties are negotiating a government agreement.","topic":"Politics & Government","icon":"🏛️"},{"es":"La reforma constitucional genera debate.","en":"The constitutional reform generates debate.","topic":"Politics & Government","icon":"🏛️"},{"es":"El presupuesto fue rechazado por la cámara.","en":"The budget was rejected by the chamber.","topic":"Politics & Government","icon":"🏛️"},{"es":"La política exterior es cada vez más relevante.","en":"Foreign policy is increasingly relevant.","topic":"Politics & Government","icon":"🏛️"},{"es":"La crisis de gobernabilidad preocupa al país.","en":"The governance crisis worries the country.","topic":"Politics & Government","icon":"🏛️"},{"es":"El estado de derecho debe ser respetado.","en":"The rule of law must be respected.","topic":"Politics & Government","icon":"🏛️"},{"es":"Se debate sobre la reforma electoral.","en":"Electoral reform is being debated.","topic":"Politics & Government","icon":"🏛️"},{"es":"La abstención electoral preocupa a los expertos.","en":"Electoral abstention concerns experts.","topic":"Politics & Government","icon":"🏛️"},{"es":"Las instituciones democráticas están bajo presión.","en":"Democratic institutions are under pressure.","topic":"Politics & Government","icon":"🏛️"},{"es":"El diálogo político es necesario para avanzar.","en":"Political dialogue is necessary to move forward.","topic":"Politics & Government","icon":"🏛️"},{"es":"El español es la segunda lengua más hablada.","en":"Spanish is the second most spoken language.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El boom literario latinoamericano fue en los 60.","en":"The Latin American literary boom was in the 60s.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"García Márquez es autor del realismo mágico.","en":"García Márquez is an author of magical realism.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"Las lenguas cooficiales de España incluyen el catalán.","en":"Spain's co-official languages include Catalan.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"La influencia árabe es visible en el español.","en":"Arabic influence is visible in Spanish.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El español tiene más de 500 millones de hablantes.","en":"Spanish has more than 500 million speakers.","topic":"Spanish-Speaking World","icon":"🌎"},{"es":"El consumo de ropa rápida tiene un alto coste.","en":"Fast fashion consumption has a high cost.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Las tendencias apuestan por lo minimalista.","en":"Current trends favour minimalism.","topic":"Clothes & Fashion","icon":"👗"},{"es":"La industria textil es una de las más contaminantes.","en":"The textile industry is one of the most polluting.","topic":"Clothes & Fashion","icon":"👗"},{"es":"El vintage ha vuelto a estar de moda.","en":"Vintage has come back into fashion.","topic":"Clothes & Fashion","icon":"👗"},{"es":"Reutilizar la ropa es consumo responsable.","en":"Reusing clothes is responsible consumption.","topic":"Clothes & Fashion","icon":"👗"},{"es":"La deforestación afecta a miles de especies.","en":"Deforestation affects thousands of species.","topic":"Animals & Nature","icon":"🐾"},{"es":"Los ecosistemas tardan décadas en recuperarse.","en":"Ecosystems take decades to recover.","topic":"Animals & Nature","icon":"🐾"},{"es":"La conservación marina es una prioridad global.","en":"Marine conservation is a global priority.","topic":"Animals & Nature","icon":"🐾"},{"es":"El equilibrio ecológico depende de la diversidad.","en":"Ecological balance depends on diversity.","topic":"Animals & Nature","icon":"🐾"},{"es":"El ser humano ha alterado el medio ambiente.","en":"Humans have altered the environment.","topic":"Animals & Nature","icon":"🐾"},{"es":"Este restaurante tiene muy buena crítica.","en":"This restaurant has very good reviews.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"La propina se deja habitualmente en efectivo.","en":"The tip is usually left in cash.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"El maridaje de vino y comida es todo un arte.","en":"Food and wine pairing is a true art.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"La presentación del plato fue impecable.","en":"The presentation of the dish was impeccable.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Hicimos la reserva para las nueve de la noche.","en":"We made the reservation for nine in the evening.","topic":"Restaurants & Ordering","icon":"🍷"},{"es":"Destaca por su creatividad y visión.","en":"She stands out for her creativity and vision.","topic":"Describing People & Things","icon":"📝"},{"es":"Tiene una personalidad muy carismática.","en":"He has a very charismatic personality.","topic":"Describing People & Things","icon":"📝"},{"es":"Es alguien que lidera con el ejemplo.","en":"She is someone who leads by example.","topic":"Describing People & Things","icon":"📝"},{"es":"Su mayor virtud es la empatía.","en":"His greatest virtue is empathy.","topic":"Describing People & Things","icon":"📝"},{"es":"Es una figura respetada en su comunidad.","en":"She is a respected figure in her community.","topic":"Describing People & Things","icon":"📝"},{"es":"¿Cómo describes tu estilo de vida?","en":"How would you describe your lifestyle?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué valores consideras más importantes?","en":"What values do you consider most important?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Cómo te imaginas dentro de diez años?","en":"How do you imagine yourself in ten years?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué es lo más difícil que has superado?","en":"What is the hardest thing you've overcome?","topic":"Conversation Starters","icon":"💡"},{"es":"¿Qué cambiarías de tu vida si pudieras?","en":"What would you change about your life if you could?","topic":"Conversation Starters","icon":"💡"},{"es":"Espero que todo salga según lo planeado.","en":"I hope everything goes as planned.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Quedamos en contacto sin falta.","en":"Let's definitely stay in touch.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido un privilegio trabajar contigo.","en":"It has been a privilege to work with you.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Me alegra que hayamos podido vernos.","en":"I'm glad we were able to see each other.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Confío en que pronto volvamos a coincidir.","en":"I trust we will meet again soon.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Me bloqueo cuando tengo que hablar rápido.","en":"I freeze up when I have to speak fast.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"La inmersión lingüística acelera el aprendizaje.","en":"Language immersion accelerates learning.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Conseguí entender a hablantes rápidos.","en":"I managed to understand fast speakers.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Cada idioma refleja una cultura única.","en":"Every language reflects a unique culture.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"La fluidez llega con la constancia.","en":"Fluency comes with consistency.","topic":"Language Learning Talk","icon":"🗣️"},{"es":"Me dijeron que habias llamado.","en":"They told me you had called.","topic":"Past Tense","icon":"⏪"},{"es":"No habia visto nada igual.","en":"I had never seen anything like it.","topic":"Past Tense","icon":"⏪"},{"es":"Llevaba anos sin verle.","en":"I had not seen him in years.","topic":"Past Tense","icon":"⏪"},{"es":"Cuando llegamos ya se habian ido.","en":"When we arrived they had already left.","topic":"Past Tense","icon":"⏪"},{"es":"Se arrepintio de no haberlo dicho.","en":"He regretted not having said it.","topic":"Past Tense","icon":"⏪"},{"es":"Le hubiera dicho la verdad si lo supiera.","en":"I would have told him the truth if I had known.","topic":"Past Tense","icon":"⏪"},{"es":"Lo habria hecho de haberlo sabido antes.","en":"I would have done it had I known sooner.","topic":"Past Tense","icon":"⏪"},{"es":"Afirmaron que nunca lo habian visto.","en":"They claimed they had never seen it.","topic":"Past Tense","icon":"⏪"},{"es":"Para cuando llegue ya habra terminado.","en":"By the time he arrives it will have finished.","topic":"Past Tense","icon":"⏪"},{"es":"Resulta que lo habia hecho antes.","en":"It turns out he had done it before.","topic":"Past Tense","icon":"⏪"},{"es":"Para el anno que viene habremos terminado.","en":"By next year we will have finished.","topic":"Future and Conditional","icon":"⏩"},{"es":"Lo haria si me lo pidieran.","en":"I would do it if they asked me.","topic":"Future and Conditional","icon":"⏩"},{"es":"Deberias hablar con ella antes.","en":"You should speak with her first.","topic":"Future and Conditional","icon":"⏩"},{"es":"En caso de que llueva cancelamos.","en":"In case it rains we will cancel.","topic":"Future and Conditional","icon":"⏩"},{"es":"Me gustaria poder quedarme mas tiempo.","en":"I would like to be able to stay longer.","topic":"Future and Conditional","icon":"⏩"},{"es":"Ojala pudiera acompannarte.","en":"I wish I could go with you.","topic":"Future and Conditional","icon":"⏩"},{"es":"Si no fuera tan tarde te llamaria.","en":"If it were not so late I would call you.","topic":"Future and Conditional","icon":"⏩"},{"es":"Si me lo hubieras dicho te habria ayudado.","en":"If you had told me I would have helped you.","topic":"Future and Conditional","icon":"⏩"},{"es":"Cuando lo vea se lo dire.","en":"When I see him I will tell him.","topic":"Future and Conditional","icon":"⏩"},{"es":"La investigacion academica requiere rigor.","en":"Academic research requires rigour.","topic":"School and Academic Life","icon":"🏫"},{"es":"Defendere mi tesis en junio.","en":"I will defend my thesis in June.","topic":"School and Academic Life","icon":"🏫"},{"es":"El plagio esta penalizado en las universidades.","en":"Plagiarism is penalised at universities.","topic":"School and Academic Life","icon":"🏫"},{"es":"Publico un articulo en una revista cientifica.","en":"He published an article in a scientific journal.","topic":"School and Academic Life","icon":"🏫"},{"es":"La interdisciplinariedad enriquece el conocimiento.","en":"Interdisciplinarity enriches knowledge.","topic":"School and Academic Life","icon":"🏫"},{"es":"Obtuvo una beca para estudiar en el extranjero.","en":"She received a scholarship to study abroad.","topic":"School and Academic Life","icon":"🏫"},{"es":"La calidad es superior aunque el precio tambien.","en":"The quality is superior though so is the price.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"En comparacion con el anno pasado ha mejorado.","en":"Compared to last year it has improved.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Hay diferencias notables entre ambos sistemas.","en":"There are notable differences between both systems.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Resulta dificil establecer una comparacion justa.","en":"It is difficult to make a fair comparison.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Los resultados son significativamente mejores.","en":"The results are significantly better.","topic":"Comparing and Describing","icon":"⚖️"},{"es":"Como describes tu estilo de vida?","en":"How would you describe your lifestyle?","topic":"Conversation Starters","icon":"💡"},{"es":"Que valores consideras mas importantes?","en":"What values do you consider most important?","topic":"Conversation Starters","icon":"💡"},{"es":"Como te imaginas dentro de diez annos?","en":"How do you imagine yourself in ten years?","topic":"Conversation Starters","icon":"💡"},{"es":"Que es lo mas dificil que has superado?","en":"What is the hardest thing you have overcome?","topic":"Conversation Starters","icon":"💡"},{"es":"Que cambiarias de tu vida si pudieras?","en":"What would you change about your life if you could?","topic":"Conversation Starters","icon":"💡"},{"es":"Espero que todo salga segun lo planeado.","en":"I hope everything goes as planned.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Quedamos en contacto sin falta.","en":"Let us definitely stay in touch.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Ha sido un privilegio trabajar contigo.","en":"It has been a privilege to work with you.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Me alegra que hayamos podido vernos.","en":"I am glad we were able to see each other.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Confio en que pronto volvamos a coincidir.","en":"I trust we will meet again soon.","topic":"Saying Goodbye","icon":"🌅"},{"es":"Me bloqueo cuando tengo que hablar rapido.","en":"I freeze up when I have to speak fast.","topic":"Language Learning","icon":"🌐"},{"es":"La inmersion linguistica acelera el aprendizaje.","en":"Language immersion accelerates learning.","topic":"Language Learning","icon":"🌐"},{"es":"Consegui entender a hablantes rapidos.","en":"I managed to understand fast speakers.","topic":"Language Learning","icon":"🌐"},{"es":"Cada idioma refleja una cultura unica.","en":"Every language reflects a unique culture.","topic":"Language Learning","icon":"🌐"},{"es":"La fluidez llega con la constancia.","en":"Fluency comes with consistency.","topic":"Language Learning","icon":"🌐"}]}];
+
+// ── helpers
+const WC = {1:'lv1',2:'lv2',3:'lv3',4:'lv4'};
+const WL = {1:'A1',2:'A2',3:'B1',4:'B2'};
+// map wave badge to d-number
+const BADGE_D = {'A1':1,'A2':2,'B1':3,'B2':4};
+
+// ── state
+let S = loadS();
+function defS(){return{waveId:null,daily:10,repeats:5,pause:4,rate:0.8,day:1,mastered:{},srs:{},ver:3}}
+function loadS(){
+  try{const r=localStorage.getItem('hm3');if(r)return{...defS(),...JSON.parse(r)}}catch(e){}
+  return defS();
+}
+function saveS(){
+  S.daily=parseInt(document.getElementById('sDaily').value)||10;
+  S.repeats=parseInt(document.getElementById('sRep').value);
+  S.pause=parseInt(document.getElementById('sPause').value);
+  S.rate=parseFloat(document.getElementById('sRate').value);
+  localStorage.setItem('hm3',JSON.stringify(S));
+  renderDash();
+}
+
+// ── voices
+let voices=[],synth=window.speechSynthesis;
+function loadV(){
+  const all=synth.getVoices();
+  voices=all.filter(v=>v.lang.startsWith('es'));
+  if(!voices.length)voices=all;
+  const sel=document.getElementById('sVoice'),prev=sel.value;
+  sel.innerHTML='';
+  voices.forEach((v,i)=>{const o=document.createElement('option');o.value=i;o.textContent=v.name.slice(0,24)+' ('+v.lang+')';sel.appendChild(o)});
+  if(prev)sel.value=prev;
+}
+loadV();if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=loadV;
+
+// ── wave helpers
+function getWave(){return WAVES.find(w=>w.id===S.waveId)||null}
+function getMastered(wid){return new Set(S.mastered[wid]||[])}
+// SRS intervals in days: after each successful review, interval grows
+const SRS_INTERVALS = [1, 3, 7, 14, 30, 9999];
+function srsKey(wid, idx){ return wid + ':' + idx; }
+function getSrsCard(wid, idx){
+  const k = srsKey(wid, idx);
+  return S.srs[k] || null; // {interval, dueDay, level} or null = not yet mastered
+}
+function isDue(wid, idx){
+  const c = getSrsCard(wid, idx);
+  if(!c) return false;
+  if(c.level >= SRS_INTERVALS.length - 1) return false; // retired — 9999 days
+  return S.day >= c.dueDay;
+}
+function getDueReviews(wave){
+  // Returns up to 3 sentences from this wave that are due for review today
+  const due = [];
+  wave.sentences.forEach((s, i) => {
+    if(isDue(wave.id, i)) due.push({s, i, isReview: true});
+  });
+  return due.slice(0, 3);
+}
+function getPending(wave){
+  const m = getMastered(wave.id);
+  return wave.sentences.filter((_, i) => !m.has(i));
+}
+function getBatch(wave){
+  const reviews = getDueReviews(wave);
+  const reviewIdxs = new Set(reviews.map(r => r.i));
+  const newCount = Math.max(0, S.daily - reviews.length);
+  const newSents = getPending(wave).filter(s => {
+    const idx = wave.sentences.indexOf(s);
+    return !reviewIdxs.has(idx);
+  }).slice(0, newCount);
+  // Build items with correct indices
+  const newItems = newSents.map(s => ({s, i: wave.sentences.indexOf(s), isReview: false}));
+  // Interleave reviews into new items
+  const combined = [];
+  let ri = 0, ni = 0;
+  while(ri < reviews.length || ni < newItems.length){
+    if(ni < newItems.length) combined.push(newItems[ni++]);
+    if(ri < reviews.length) combined.push(reviews[ri++]);
+  }
+  return combined;
+}
+
+function totalMastered(){return WAVES.reduce((a,w)=>{return a+(S.mastered[w.id]||[]).length},0)}
+function totalAll(){return WAVES.reduce((a,w)=>a+w.sentences.length,0)}
+
+function isWaveLocked(wave){
+  return false; // all waves freely accessible
+}
+
+// ── render dashboard
+function renderDash(){
+  document.getElementById('sDaily').value=S.daily;
+  document.getElementById('sRep').value=S.repeats;document.getElementById('sRepV').textContent=S.repeats+'x';
+  document.getElementById('sPause').value=S.pause;document.getElementById('sPauseV').textContent=S.pause+'s';
+  document.getElementById('sRate').value=S.rate;document.getElementById('sRateV').textContent=parseFloat(S.rate).toFixed(2);
+  document.getElementById('sDay').textContent=S.day;
+
+  const tm=totalMastered(),ta=totalAll(),rem=ta-tm;
+  // Count all due reviews across all waves
+  const totalDue=WAVES.reduce((a,w)=>a+getDueReviews(w).length,0);
+  document.getElementById('sTotalM').textContent=tm;
+  document.getElementById('sTotalAll').textContent=ta;
+  document.getElementById('sDays').textContent=rem>0?Math.ceil(rem/S.daily):0;
+  document.getElementById('pText').textContent=tm+' / '+ta;
+  document.getElementById('pFill').style.width=(ta?Math.round(tm/ta*100):0)+'%';
+  const srsEl=document.getElementById('sSRS');
+  if(srsEl) srsEl.innerHTML='Reviews due <b>'+totalDue+'</b>';
+
+  renderWaveCards();
+
+  const wave=getWave();
+  if(!wave){
+    document.getElementById('tHead').textContent='Select a wave above';
+    document.getElementById('tDesc').textContent='Choose any wave — all levels are open. The ★ marks your recommended next wave based on progress.';
+    document.getElementById('bInfo').textContent='—';
+    document.getElementById('btnStart').disabled=true;
+    document.getElementById('batchLabel').textContent='No wave selected';
+    document.getElementById('batchMeta').textContent='';
+    document.getElementById('bGrid').innerHTML='';
+    return;
+  }
+
+  const batch=getBatch(wave);
+  const reviewCount=batch.filter(item=>item.isReview).length;
+  const newCount=batch.length-reviewCount;
+  const mc=getMastered(wave.id).size;
+  const wTotal=wave.sentences.length;
+  const wRem=wTotal-mc;
+
+  if(!batch.length){
+    document.getElementById('tHead').textContent='🎉 '+wave.name+' complete!';
+    document.getElementById('tDesc').textContent='All sentences in this wave mastered! Pick another wave to keep going.';
+    document.getElementById('bInfo').textContent='Complete';
+    document.getElementById('btnStart').disabled=true;
+  } else {
+    document.getElementById('tHead').textContent='Today — Day '+S.day+' · '+wave.badge;
+    const reviewNote=reviewCount>0?' + '+reviewCount+' 🔁 SRS review'+(reviewCount>1?'s':''):'';
+    document.getElementById('tDesc').textContent=
+      newCount+' new sentence'+(newCount!==1?'s':'')+reviewNote+', '+S.repeats+'× each with a '+S.pause+'s pause. '+
+      'Say each aloud in the gap. Mastered sentences return for spaced review at 1→3→7→14→30 day intervals.';
+    document.getElementById('bInfo').textContent=batch.length+' sentences · ~'+Math.ceil(batch.length*S.repeats*(S.pause+2)/60)+' min';
+    document.getElementById('btnStart').disabled=false;
+  }
+
+  document.getElementById('batchLabel').textContent='Today\'s '+batch.length+' sentences — '+wave.name;
+  document.getElementById('batchMeta').textContent=mc+' / '+wTotal+' mastered · '+Math.ceil(wRem/S.daily)+' days left in wave';
+  renderBatchGrid(wave,batch);
+}
+
+function renderWaveCards(){
+  const c=document.getElementById('waveCards');c.innerHTML='';
+  WAVES.forEach(wave=>{
+    const mc=getMastered(wave.id).size;
+    const total=wave.sentences.length;
+    const pct=total?Math.round(mc/total*100):0;
+    const isSelected=S.waveId===wave.id;
+    const isRecommended = (()=>{
+      // recommend the lowest wave that still has pending sentences
+      for(let wi=0; wi<WAVES.length; wi++){
+        if(getPending(WAVES[wi]).length>0) return WAVES[wi].id===wave.id;
+      }
+      return false;
+    })();
+    const d=document.createElement('div');
+    d.className='wcard'+(isSelected?' selected':'');
+    d.style.background=wave.bg;d.style.color=wave.color;
+    d.innerHTML=
+      '<div class="wcard-top">'+
+        '<span class="wbadge" style="background:'+wave.color+'22;color:'+wave.color+'">'+wave.badge+'</span>'+
+        '<span class="wlock">'+(pct===100?'✓':isRecommended?'★':'')+'</span>'+
+      '</div>'+
+      '<h3>'+wave.name+'</h3>'+
+      '<p>'+wave.sub+'</p>'+
+      '<div class="wprog">'+
+        '<div class="wprog-bar"><div class="wprog-fill" style="background:'+wave.color+';width:'+pct+'%"></div></div>'+
+        '<div class="wprog-txt" style="color:'+wave.color+'">'+mc+' / '+total+' mastered</div>'+
+      '</div>';
+    d.onclick=()=>{S.waveId=wave.id;localStorage.setItem('hm3',JSON.stringify(S));renderDash()};
+    c.appendChild(d);
+  });
+}
+
+function renderBatchGrid(wave,batchItems){
+  const m=getMastered(wave.id);
+  const batchIdxs=new Set(batchItems.map(item=>item.i));
+  const g=document.getElementById('bGrid');g.innerHTML='';
+  wave.sentences.forEach((s,i)=>{
+    const isM=m.has(i),isT=batchIdxs.has(i);
+    if(!isM&&!isT)return;
+    const item=batchItems.find(x=>x.i===i);
+    const isReview=item&&item.isReview;
+    const c=document.createElement('div');
+    c.className='bc'+(isM&&!isT?' m':isT?' t':'');
+    c.innerHTML=
+      '<div class="bn"><span>'+s.icon+'</span><span>'+(isReview?'🔁 review':isT?'new today':isM?'mastered':'')+'</span></div>'+
+      '<div class="be">'+s.es+'</div>'+
+      '<div class="bw">'+s.en+'</div>';
+    g.appendChild(c);
+  });
+  if(!g.children.length&&batchItems.length){
+    batchItems.forEach(item=>{
+      const s=item.s;
+      const c=document.createElement('div');
+      c.className='bc t';
+      c.innerHTML='<div class="bn"><span>'+s.icon+'</span><span>'+(item.isReview?'🔁 review':'new today')+'</span></div><div class="be">'+s.es+'</div><div class="bw">'+s.en+'</div>';
+      g.appendChild(c);
+    });
+  }
+}
+
+function confirmReset(){
+  showConf('Reset all progress for this wave? This cannot be undone.',()=>{
+    const wave=getWave();
+    if(!wave)return;
+    S.mastered[wave.id]=[];
+    // Clear all SRS cards for this wave
+    Object.keys(S.srs).forEach(k=>{if(k.startsWith(wave.id+':'))delete S.srs[k]});
+    S.day=1;
+    localStorage.setItem('hm3',JSON.stringify(S));
+    renderDash();
+  },'Yes, reset');
+}
+
+// ── session
+let sess={q:[],i:0,rep:0,playing:false,got:0,tid:null,waveId:null};
+let showTrans=true,autoPlay=false;
+
+function startSession(){
+  const wave=getWave();
+  const batchItems=getBatch(wave);
+  if(!batchItems.length)return;
+  // Interleave by topic for variety, preserving isReview flag
+  const byTopic={};
+  batchItems.forEach(item=>{
+    const t=item.s.topic;
+    (byTopic[t]=byTopic[t]||[]).push(item);
+  });
+  const topics=Object.keys(byTopic);
+  const q=[];
+  let filled=false;
+  while(!filled){
+    filled=true;
+    topics.forEach(t=>{if(byTopic[t].length){q.push(byTopic[t].shift());filled=false}});
+  }
+  // q is array of {s, i, isReview}
+
+  autoPlay=document.getElementById('sAuto').value==='1';
+  sess={q,i:0,rep:0,playing:false,got:0,tid:null,waveId:wave.id};
+  showView('vPlayer');
+  document.getElementById('ptitle').textContent=wave.name.toUpperCase()+' · DAY '+S.day;
+  document.getElementById('autoBtn').textContent='⏩ Auto: '+(autoPlay?'On':'Off');
+  document.getElementById('autoBtn').className='btn-sm'+(autoPlay?' active':'');
+  document.getElementById('autoBanner').style.display=autoPlay?'block':'none';
+  renderPeek();updatePD();
+  if(autoPlay){setTimeout(()=>{sess.playing=true;document.getElementById('btnPlay').innerHTML='⏸';document.getElementById('btnPlay').classList.add('act');playLoop()},600)}
+}
+
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));document.getElementById(id).classList.add('on')}
+
+function updatePD(){
+  if(!sess.q.length)return;
+  const item=sess.q[sess.i];
+  const s=item.s;
+  const d=BADGE_D[WAVES.find(w=>w.id===sess.waveId).badge];
+  document.getElementById('sNum').textContent=(sess.i+1)+' / '+sess.q.length;
+  document.getElementById('topicCrumb').textContent=s.icon+' '+s.topic+(item.isReview?' · 🔁 Review':'');
+  const b=document.getElementById('lvlBadge');
+  b.className='lvl '+'lv'+d;b.textContent=WL[d];
+  const e=document.getElementById('esText');
+  e.className='sp-es an';e.textContent=s.es;setTimeout(()=>e.classList.remove('an'),350);
+  document.getElementById('enText').textContent=showTrans?s.en:'';
+  document.getElementById('btnPrev').disabled=sess.i===0;
+  document.getElementById('btnGot').textContent=sess.i<sess.q.length-1?'✓ Got it — next':'✓ Got it — finish';
+  const pct=Math.round(sess.i/sess.q.length*100);
+  document.getElementById('pbarFill').style.width=pct+'%';
+  document.getElementById('pbarLbl').textContent=(sess.i+1)+'/'+sess.q.length;
+  renderPips();renderSpDots();updatePeekHL();
+}
+
+function renderPips(){
+  const row=document.getElementById('pipRow');row.innerHTML='';
+  for(let i=0;i<S.repeats;i++){
+    const p=document.createElement('div');
+    p.className='pip'+(i<sess.rep?' d':i===sess.rep?' a':'');
+    row.appendChild(p);
+  }
+}
+function renderSpDots(){
+  const row=document.getElementById('spDots');row.innerHTML='';
+  const max=Math.min(sess.q.length,20);
+  sess.q.slice(0,max).forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='sp'+(i<sess.i?' done':i===sess.i?' cur':'');
+    row.appendChild(d);
+  });
+}
+function renderPeek(){
+  const l=document.getElementById('peekList');l.innerHTML='';
+  sess.q.forEach((item,i)=>{
+    const d=document.createElement('div');
+    d.className='pi'+(i===sess.i?' cur':i<sess.i?' done':'');
+    d.textContent=(item.isReview?'🔁 ':'')+item.s.es;
+    d.title=item.s.es+' — '+item.s.en;
+    l.appendChild(d);
+  });
+  scrollPeek();
+}
+function updatePeekHL(){
+  const items=document.getElementById('peekList').children;
+  for(let i=0;i<items.length;i++)items[i].className='pi'+(i===sess.i?' cur':i<sess.i?' done':'');
+  scrollPeek();
+}
+function scrollPeek(){
+  const l=document.getElementById('peekList');
+  if(l.children[sess.i])l.children[sess.i].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+function speak(text,cb){
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='es-ES';u.rate=S.rate;
+  const vi=parseInt(document.getElementById('sVoice').value);
+  if(voices[vi])u.voice=voices[vi];
+  u.onend=cb;u.onerror=cb;synth.speak(u);
+}
+
+function playLoop(){
+  if(!sess.playing)return;
+  const item=sess.q[sess.i];
+  const s=item.s;
+  updatePD();
+  document.getElementById('esText').classList.add('spk');
+  const hints=['Say it out loud →','Repeat →','Echo it →','Again →','One more →'];
+  setStatus('Playing… ('+(sess.rep+1)+'/'+S.repeats+')');
+  speak(s.es,()=>{
+    document.getElementById('esText').classList.remove('spk');
+    if(!sess.playing)return;
+    sess.rep++;renderPips();
+    if(sess.rep<S.repeats){
+      setStatus(hints[Math.min(sess.rep-1,hints.length-1)]);
+      sess.tid=setTimeout(playLoop,S.pause*1000);
+    } else {
+      sess.rep=0;
+      const nxt=sess.i+1;
+      if(nxt>=sess.q.length){
+        sess.playing=false;
+        document.getElementById('btnPlay').innerHTML='▶';
+        document.getElementById('btnPlay').classList.remove('act');
+        if(autoPlay){setStatus('All done! Finishing…');setTimeout(()=>finishSess(),1200)}
+        else setStatus('All played. Mark mastered or replay.');
+      } else {
+        setStatus('Next →');
+        sess.tid=setTimeout(()=>{
+          if(autoPlay){markMasteredSilent(sess.i)}
+          sess.i=nxt;updatePD();
+          sess.playing=true;
+          document.getElementById('btnPlay').innerHTML='⏸';
+          document.getElementById('btnPlay').classList.add('act');
+          playLoop();
+        },700);
+      }
+    }
+  });
+}
+
+function markMasteredSilent(idx){
+  const wave=WAVES.find(w=>w.id===sess.waveId);
+  const item=sess.q[idx]; // {s, i, isReview}
+  const realIdx=item.i;
+  if(realIdx===-1)return;
+
+  if(item.isReview){
+    // Advance SRS interval
+    const k=srsKey(sess.waveId, realIdx);
+    const card=S.srs[k]||{level:0, dueDay:S.day, interval:SRS_INTERVALS[0]};
+    const nextLevel=Math.min(card.level+1, SRS_INTERVALS.length-1);
+    const nextInterval=SRS_INTERVALS[nextLevel];
+    S.srs[k]={level:nextLevel, dueDay:S.day+nextInterval, interval:nextInterval};
+    if(nextLevel >= SRS_INTERVALS.length-1) sess.got++; // fully retired
+  } else {
+    // First-time mastering: add to mastered + start SRS
+    if(!S.mastered[sess.waveId])S.mastered[sess.waveId]=[];
+    if(!S.mastered[sess.waveId].includes(realIdx)){
+      S.mastered[sess.waveId].push(realIdx);
+      sess.got++;
+      // Schedule first review for tomorrow
+      const k=srsKey(sess.waveId, realIdx);
+      S.srs[k]={level:0, dueDay:S.day+SRS_INTERVALS[0], interval:SRS_INTERVALS[0]};
+    }
+  }
+  localStorage.setItem('hm3',JSON.stringify(S));
+}
+
+function togglePlay(){
+  if(!sess.q.length)return;
+  if(sess.playing){
+    sess.playing=false;synth.cancel();clearTimeout(sess.tid);
+    document.getElementById('btnPlay').innerHTML='▶';document.getElementById('btnPlay').classList.remove('act');
+    document.getElementById('esText').classList.remove('spk');setStatus('Paused.');
+  } else {
+    sess.playing=true;sess.rep=0;
+    document.getElementById('btnPlay').innerHTML='⏸';document.getElementById('btnPlay').classList.add('act');
+    playLoop();
+  }
+}
+function stopPlay(){
+  sess.playing=false;synth.cancel();clearTimeout(sess.tid);
+  document.getElementById('btnPlay').innerHTML='▶';document.getElementById('btnPlay').classList.remove('act');
+  document.getElementById('esText').classList.remove('spk');
+}
+function nextS(){stopPlay();sess.rep=0;sess.i=Math.min(sess.i+1,sess.q.length-1);updatePD();setStatus('')}
+function prevS(){stopPlay();sess.rep=0;sess.i=Math.max(sess.i-1,0);updatePD();setStatus('')}
+function replayS(){stopPlay();sess.rep=0;updatePD();setStatus('Ready.')}
+
+function toggleAutoplay(){
+  autoPlay=!autoPlay;
+  const btn=document.getElementById('autoBtn');
+  btn.textContent='⏩ Auto: '+(autoPlay?'On':'Off');
+  btn.className='btn-sm'+(autoPlay?' active':'');
+  document.getElementById('autoBanner').style.display=autoPlay?'block':'none';
+  setStatus(autoPlay?'Hands-free — just listen and repeat aloud.':'Manual mode — press play to continue.');
+  if(autoPlay&&!sess.playing)togglePlay();
+}
+
+function markMastered(){
+  stopPlay();
+  markMasteredSilent(sess.i);
+  if(sess.i>=sess.q.length-1){finishSess();return}
+  sess.i++;sess.rep=0;updatePD();setStatus('');
+  if(autoPlay){
+    sess.playing=true;
+    document.getElementById('btnPlay').innerHTML='⏸';document.getElementById('btnPlay').classList.add('act');
+    playLoop();
+  }
+}
+
+function finishSess(){
+  stopPlay();S.day++;localStorage.setItem('hm3',JSON.stringify(S));
+  const wave=WAVES.find(w=>w.id===sess.waveId);
+  const mc=getMastered(wave.id).size;
+  const rem=wave.sentences.length-mc;
+  const totalM=totalMastered();
+  const reviewsDone=sess.q.filter(item=>item.isReview).length;
+  const newMastered=sess.q.filter(item=>!item.isReview).length;
+  const dueNext=getDueReviews(wave).length;
+  document.getElementById('csDone').textContent=sess.q.length;
+  document.getElementById('csGot').textContent=sess.got;
+  document.getElementById('csAll').textContent=totalM;
+  document.getElementById('csDaysLeft').textContent=rem>0?Math.ceil(rem/S.daily):0;
+  let msg='';
+  if(rem<=0) msg='Wave complete! All sentences are working through your spaced review queue.';
+  else {
+    msg='Great session — '+rem+' new sentences left in this wave.';
+    if(reviewsDone>0) msg+=' '+reviewsDone+' SRS review'+(reviewsDone>1?'s':'')+' done.';
+    if(dueNext>0) msg+=' '+dueNext+' review'+(dueNext>1?'s':'')+' due tomorrow.';
+    else msg+=' No reviews due tomorrow — enjoy a clean session.';
+  }
+  document.getElementById('ovMsg').textContent=msg;
+  document.getElementById('ovComplete').classList.add('show');
+}
+
+function closeOv(){document.getElementById('ovComplete').classList.remove('show');showView('vDash');renderDash()}
+function repeatSess(){
+  document.getElementById('ovComplete').classList.remove('show');
+  const q=sess.q;
+  sess={q,i:0,rep:0,playing:false,got:0,tid:null,waveId:sess.waveId};
+  showView('vPlayer');renderPeek();updatePD();
+  if(autoPlay)setTimeout(()=>{sess.playing=true;document.getElementById('btnPlay').innerHTML='⏸';document.getElementById('btnPlay').classList.add('act');playLoop()},500);
+}
+
+function exitSession(){
+  stopPlay();
+  showConf('Exit session? Your mastered sentences are already saved.',()=>{
+    showView('vDash');renderDash();
+  },'Yes, exit');
+}
+
+function toggleTrans(){
+  showTrans=!showTrans;
+  document.getElementById('togBox').classList.toggle('on',showTrans);
+  if(sess.q.length)document.getElementById('enText').textContent=showTrans?sess.q[sess.i].s.en:'';
+}
+function setStatus(m){document.getElementById('statusTxt').textContent=m}
+
+// ── confirm
+function showConf(msg,cb,yesLabel){
+  document.getElementById('confMsg').textContent=msg;
+  const y=document.getElementById('confYes');
+  y.textContent=yesLabel||'Yes';
+  y.onclick=()=>{closeConf();cb()};
+  document.getElementById('ovConfirm').classList.add('show');
+}
+function closeConf(){document.getElementById('ovConfirm').classList.remove('show')}
+
+// ── init
+renderDash();
+</script>
+</body>
+</html>
